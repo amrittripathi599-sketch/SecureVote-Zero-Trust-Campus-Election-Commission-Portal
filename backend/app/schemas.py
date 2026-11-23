@@ -18,6 +18,16 @@ class UserLoginRequest(BaseModel):
     password: str = Field(..., min_length=6, description="Account password")
 
 
+class VoterCreateRequest(BaseModel):
+    roll_number: str = Field(..., min_length=2, max_length=50, description="Unique institutional roll number")
+    full_name: str = Field(..., min_length=2, max_length=100, description="Full student name")
+    password: str = Field(..., min_length=6, max_length=100, description="Initial account password")
+
+
+class BatchVotersCreateRequest(BaseModel):
+    voters: List[VoterCreateRequest] = Field(..., min_length=1, max_length=500)
+
+
 class UserResponse(UserBase):
     user_id: int
     role: UserRole
@@ -25,6 +35,13 @@ class UserResponse(UserBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BatchVotersCreateResponse(BaseModel):
+    created_count: int
+    skipped_count: int
+    created_voters: List[UserResponse]
+    skipped_roll_numbers: List[str]
 
 
 class TokenResponse(BaseModel):

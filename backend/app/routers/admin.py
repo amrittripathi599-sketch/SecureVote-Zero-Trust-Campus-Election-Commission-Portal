@@ -9,6 +9,8 @@ from app.deps import get_client_ip, require_admin
 from app.models import AuditLog, Candidate, Election, ElectionParticipation, ElectionStatus, User, UserRole, VotesLedger
 from app.schemas import (
     AuditLogResponse,
+    BatchVotersCreateRequest,
+    BatchVotersCreateResponse,
     CandidateCreateRequest,
     CandidateResponse,
     DeclareResultResponse,
@@ -20,7 +22,9 @@ from app.schemas import (
     ResumeElectionRequest,
     TurnoutCandidateTally,
     UserResponse,
+    VoterCreateRequest,
 )
+from app.security import hash_password
 from app.services.storage import get_storage_service
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
@@ -542,3 +546,121 @@ def list_users(
     """
     users = db.execute(select(User).order_by(User.roll_number.asc())).scalars().all()
     return [UserResponse.model_validate(u) for u in users]
+
+
+@router.post("/voters", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_voter(
+    payload: VoterCreateRequest,
+    request: Request,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Registers a new eligible student voter.
+    - Requires role 'admin' (403 Forbidden for non-admins).
+    - Checks for roll number uniqueness (case-insensitive) -> 409 Conflict if duplicate.
+    - Hashes password securely via bcrypt (password never stored or transmitted plaintext).
+    - Persists with role='voter', has_voted=False.
+    - Records an immutable audit log entry (action='admin.voter.create').
+    - Returns UserResponse with password_hash strictly omitted.
+    """
+    roll_clean = payload.roll_number.strip().upper()
+    name_clean = payload.full_name.strip()
+
+    existing = db.execute(
+        select(User).where(func.upper(User.roll_number) == roll_clean)
+    ).scalar_one_or_none()
+
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with roll number '{roll_clean}' already exists."
+        )
+
+    now = datetime.utcnow()
+    new_voter = User(
+        roll_number=roll_clean,
+        password_hash=hash_password(payload.password),
+        full_name=name_clean,
+        role=UserRole.voter,
+        has_voted=False,
+        created_at=now
+    )
+    db.add(new_voter)
+    db.flush()
+
+    audit_entry = AuditLog(
+        user_id=admin_user.user_id,
+        action="admin.voter.create",
+        status="success",
+        timestamp=now,
+        ip_address=get_client_ip(request),
+        details=f"Admin registered eligible student voter '{name_clean}' (Roll: {roll_clean}, User ID: {new_voter.user_id})."
+    )
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(new_voter)
+
+    return UserResponse.model_validate(new_voter)
+
+
+@router.post("/voters/batch", response_model=BatchVotersCreateResponse, status_code=status.HTTP_201_CREATED)
+def batch_create_voters(
+    payload: BatchVotersCreateRequest,
+    request: Request,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Bulk register student voters.
+    - Creates eligible voters in batch.
+    - Gracefully skips existing roll numbers.
+    - Writes an immutable audit entry for the batch creation.
+    """
+    now = datetime.utcnow()
+    created_voters = []
+    skipped_rolls = []
+
+    for item in payload.voters:
+        roll_clean = item.roll_number.strip().upper()
+        name_clean = item.full_name.strip()
+
+        existing = db.execute(
+            select(User).where(func.upper(User.roll_number) == roll_clean)
+        ).scalar_one_or_none()
+
+        if existing:
+            skipped_rolls.append(roll_clean)
+            continue
+
+        voter = User(
+            roll_number=roll_clean,
+            password_hash=hash_password(item.password),
+            full_name=name_clean,
+            role=UserRole.voter,
+            has_voted=False,
+            created_at=now
+        )
+        db.add(voter)
+        db.flush()
+        created_voters.append(UserResponse.model_validate(voter))
+
+    if created_voters:
+        audit_entry = AuditLog(
+            user_id=admin_user.user_id,
+            action="admin.voter.batch_create",
+            status="success",
+            timestamp=now,
+            ip_address=get_client_ip(request),
+            details=f"Admin batch-registered {len(created_voters)} voters. Skipped {len(skipped_rolls)} duplicates."
+        )
+        db.add(audit_entry)
+
+    db.commit()
+
+    return BatchVotersCreateResponse(
+        created_count=len(created_voters),
+        skipped_count=len(skipped_rolls),
+        created_voters=created_voters,
+        skipped_roll_numbers=skipped_rolls
+    )

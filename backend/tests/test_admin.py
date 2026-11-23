@@ -286,3 +286,83 @@ def test_resume_election_lifecycle_and_security(client, admin_token, voter_token
     re_declared_data = re_declare.json()
     assert re_declared_data["status"] == "closed"
     assert re_declared_data["total_voted"] == 2
+
+
+def test_admin_create_voter_lifecycle_and_security(client, admin_token, voter_token):
+    """
+    Verifies the Add Voter feature:
+    1. Non-admin voter receives 403 Forbidden.
+    2. Admin registers new student voter (STU099, Kabir Sharma).
+    3. Password hash is never exposed in response.
+    4. Newly created voter can immediately log in with provided credentials.
+    5. Duplicate roll number registration returns 409 Conflict.
+    6. Audit log entry is recorded with action='admin.voter.create'.
+    """
+    # 1. Voter cannot create another voter
+    voter_attempt = client.post(
+        "/api/admin/voters",
+        json={"roll_number": "STU099", "full_name": "Unauthorized Attempt", "password": "Password@123"},
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert voter_attempt.status_code == 403
+
+    # 2. Admin creates voter
+    admin_create = client.post(
+        "/api/admin/voters",
+        json={"roll_number": "STU099", "full_name": "Kabir Sharma", "password": "SecurePassword@123"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert admin_create.status_code == 201
+    voter_data = admin_create.json()
+    assert voter_data["roll_number"] == "STU099"
+    assert voter_data["full_name"] == "Kabir Sharma"
+    assert voter_data["role"] == "voter"
+    assert voter_data["has_voted"] is False
+    assert "password_hash" not in voter_data
+
+    # 3. New voter logs in successfully
+    login_res = client.post(
+        "/api/auth/login",
+        json={"roll_number": "STU099", "password": "SecurePassword@123"}
+    )
+    assert login_res.status_code == 200
+    assert "access_token" in login_res.json()
+
+    # 4. Duplicate registration returns 409 Conflict
+    dup_res = client.post(
+        "/api/admin/voters",
+        json={"roll_number": "STU099", "full_name": "Kabir Duplicate", "password": "AnotherPassword@123"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert dup_res.status_code == 409
+    assert "already exists" in dup_res.json()["detail"].lower()
+
+    # 5. Audit log check
+    audit_res = client.get(
+        "/api/admin/audit-logs?action=admin.voter.create",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert audit_res.status_code == 200
+    logs = audit_res.json()["items"]
+    assert len(logs) >= 1
+    assert "STU099" in logs[0]["details"]
+
+
+def test_admin_batch_create_voters(client, admin_token):
+    """Verifies batch voter provisioning and duplicate roll number skipping."""
+    batch_res = client.post(
+        "/api/admin/voters/batch",
+        json={
+            "voters": [
+                {"roll_number": "STU081", "full_name": "Student Eighty One", "password": "Voter@123"},
+                {"roll_number": "STU082", "full_name": "Student Eighty Two", "password": "Voter@123"},
+                {"roll_number": "STU081", "full_name": "Student Eighty One Duplicate", "password": "Voter@123"},
+            ]
+        },
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert batch_res.status_code == 201
+    data = batch_res.json()
+    assert data["created_count"] == 2
+    assert data["skipped_count"] == 1
+    assert "STU081" in data["skipped_roll_numbers"]

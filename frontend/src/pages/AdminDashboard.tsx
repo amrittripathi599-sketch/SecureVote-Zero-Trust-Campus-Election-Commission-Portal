@@ -18,6 +18,7 @@ import {
   Search,
   Trophy,
   RotateCcw,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
@@ -54,6 +55,15 @@ export const AdminDashboard: React.FC = () => {
   const [electionToResume, setElectionToResume] = useState<Election | null>(null);
   const [isResuming, setIsResuming] = useState<boolean>(false);
   const [resumeNewEndTime, setResumeNewEndTime] = useState<string>('');
+
+  // Add Voter Modal state
+  const [isAddVoterModalOpen, setIsAddVoterModalOpen] = useState<boolean>(false);
+  const [voterModalMode, setVoterModalMode] = useState<'single' | 'bulk'>('single');
+  const [newVoterRoll, setNewVoterRoll] = useState<string>('');
+  const [newVoterName, setNewVoterName] = useState<string>('');
+  const [newVoterPassword, setNewVoterPassword] = useState<string>('Voter@123');
+  const [bulkVoterText, setBulkVoterText] = useState<string>('');
+  const [isCreatingVoter, setIsCreatingVoter] = useState<boolean>(false);
 
   // Candidate Nomination form state
   const [selectedElectionId, setSelectedElectionId] = useState<number | ''>('');
@@ -180,6 +190,89 @@ export const AdminDashboard: React.FC = () => {
       setElectionToResume(null);
     } finally {
       setIsResuming(false);
+    }
+  };
+
+  const handleCreateVoter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    if (voterModalMode === 'single') {
+      if (!newVoterRoll.trim() || !newVoterName.trim()) {
+        setError('Please enter both Roll Number and Full Name.');
+        return;
+      }
+      setIsCreatingVoter(true);
+      try {
+        const res = await apiClient.post<UserType>('/api/admin/voters', {
+          roll_number: newVoterRoll.trim(),
+          full_name: newVoterName.trim(),
+          password: newVoterPassword.trim() || 'Voter@123',
+        });
+        setSuccessMessage(`Voter ${res.data.full_name} (${res.data.roll_number}) registered successfully!`);
+        setNewVoterRoll('');
+        setNewVoterName('');
+        setNewVoterPassword('Voter@123');
+        setIsAddVoterModalOpen(false);
+        // Refresh users list
+        const usersRes = await apiClient.get<UserType[]>('/api/admin/users');
+        setUsers(usersRes.data);
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Failed to register voter.');
+      } finally {
+        setIsCreatingVoter(false);
+      }
+    } else {
+      // Bulk CSV / multi-line mode
+      const lines = bulkVoterText
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+
+      if (lines.length === 0) {
+        setError('Please enter at least one voter record in the bulk box.');
+        return;
+      }
+
+      const votersToCreate = [];
+      for (const line of lines) {
+        const parts = line.split(',').map((p) => p.trim());
+        if (parts.length < 2) {
+          setError(`Invalid format in line: "${line}". Expected "RollNumber, FullName, [Password]"`);
+          return;
+        }
+        votersToCreate.push({
+          roll_number: parts[0],
+          full_name: parts[1],
+          password: parts[2] || 'Voter@123',
+        });
+      }
+
+      setIsCreatingVoter(true);
+      try {
+        const res = await apiClient.post<{
+          created_count: number;
+          skipped_count: number;
+          created_voters: UserType[];
+          skipped_roll_numbers: string[];
+        }>('/api/admin/voters/batch', { voters: votersToCreate });
+
+        let msg = `Batch completed: Successfully registered ${res.data.created_count} voters!`;
+        if (res.data.skipped_count > 0) {
+          msg += ` (${res.data.skipped_count} skipped as duplicates: ${res.data.skipped_roll_numbers.join(', ')})`;
+        }
+        setSuccessMessage(msg);
+        setBulkVoterText('');
+        setIsAddVoterModalOpen(false);
+        // Refresh users list
+        const usersRes = await apiClient.get<UserType[]>('/api/admin/users');
+        setUsers(usersRes.data);
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Failed to batch register voters.');
+      } finally {
+        setIsCreatingVoter(false);
+      }
     }
   };
 
@@ -759,15 +852,26 @@ export const AdminDashboard: React.FC = () => {
               </p>
             </div>
 
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={userSearch}
-                onChange={(e) => setUserSearch(e.target.value)}
-                placeholder="Search roll number or name..."
-                className="pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:ring-brand-500 focus:border-brand-500"
-              />
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Search roll number or name..."
+                  className="pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:ring-brand-500 focus:border-brand-500"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAddVoterModalOpen(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-all whitespace-nowrap"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Add Voter</span>
+              </button>
             </div>
           </div>
 
@@ -939,6 +1043,143 @@ export const AdminDashboard: React.FC = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Voter Modal */}
+      {isAddVoterModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3 text-brand-600">
+                <div className="p-3 bg-brand-50 rounded-2xl border border-brand-100">
+                  <UserPlus className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Register Eligible Voter</h3>
+                  <p className="text-xs text-slate-500">Zero-Trust Credential Provisioning</p>
+                </div>
+              </div>
+
+              {/* Mode Toggle: Single vs Bulk */}
+              <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setVoterModalMode('single')}
+                  className={`px-3 py-1 rounded-lg transition-colors ${
+                    voterModalMode === 'single'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Single
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVoterModalMode('bulk')}
+                  className={`px-3 py-1 rounded-lg transition-colors ${
+                    voterModalMode === 'bulk'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Bulk CSV
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateVoter} className="space-y-4">
+              {voterModalMode === 'single' ? (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Roll Number <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newVoterRoll}
+                      onChange={(e) => setNewVoterRoll(e.target.value)}
+                      placeholder="e.g. STU006"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none uppercase font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newVoterName}
+                      onChange={(e) => setNewVoterName(e.target.value)}
+                      placeholder="e.g. Kabir Sharma"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Initial Password
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newVoterPassword}
+                      onChange={(e) => setNewVoterPassword(e.target.value)}
+                      placeholder="Default: Voter@123"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      Password will be securely hashed with bcrypt prior to database insertion.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Paste Voters (One per line: RollNumber, FullName, Password)
+                  </label>
+                  <textarea
+                    rows={5}
+                    value={bulkVoterText}
+                    onChange={(e) => setBulkVoterText(e.target.value)}
+                    placeholder={`STU006, Kabir Sharma, Voter@123\nSTU007, Priya Verma, Voter@123`}
+                    className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    Format: <code>RollNumber, Full Name, Password</code>. Duplicates are safely skipped.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddVoterModalOpen(false)}
+                  disabled={isCreatingVoter}
+                  className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingVoter}
+                  className="px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+                >
+                  {isCreatingVoter ? (
+                    <span>Registering...</span>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      <span>{voterModalMode === 'single' ? 'Register Voter' : 'Batch Register'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

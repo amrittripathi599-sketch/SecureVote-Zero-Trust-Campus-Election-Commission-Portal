@@ -429,6 +429,83 @@ Reopens voting and revokes a premature or accidental result declaration. Clears 
 
 ---
 
+### 5.9 Register New Eligible Voter
+Provisions an individual student voter account with credentials and institutional roll number. Password is encrypted using bcrypt before database insertion.
+
+- **Method**: `POST`
+- **Route**: `/api/admin/voters`
+- **Auth**: Bearer Token (`role: "admin"` only)
+- **Request Body**:
+  ```json
+  {
+    "roll_number": "STU006",
+    "full_name": "Kabir Sharma",
+    "password": "SecurePassword@123"
+  }
+  ```
+- **Responses**:
+  - `201 Created`:
+  ```json
+  {
+    "roll_number": "STU006",
+    "full_name": "Kabir Sharma",
+    "user_id": 7,
+    "role": "voter",
+    "has_voted": false,
+    "created_at": "2026-11-23T13:30:00"
+  }
+  ```
+  - `403 Forbidden`: If caller is not an administrator.
+  - `409 Conflict`: If `roll_number` is already registered.
+
+---
+
+### 5.10 Batch Provision Voters
+Bulk registers student voter accounts. Automatically detects and skips duplicate roll numbers without halting the transaction.
+
+- **Method**: `POST`
+- **Route**: `/api/admin/voters/batch`
+- **Auth**: Bearer Token (`role: "admin"` only)
+- **Request Body**:
+  ```json
+  {
+    "voters": [
+      {
+        "roll_number": "STU007",
+        "full_name": "Priya Verma",
+        "password": "Voter@123"
+      },
+      {
+        "roll_number": "STU008",
+        "full_name": "Rahul Deshmukh",
+        "password": "Voter@123"
+      }
+    ]
+  }
+  ```
+- **Responses**:
+  - `201 Created`:
+  ```json
+  {
+    "created_count": 2,
+    "skipped_count": 0,
+    "created_voters": [
+      {
+        "roll_number": "STU007",
+        "full_name": "Priya Verma",
+        "user_id": 8,
+        "role": "voter",
+        "has_voted": false,
+        "created_at": "2026-11-23T13:30:00"
+      }
+    ],
+    "skipped_roll_numbers": []
+  }
+  ```
+  - `403 Forbidden`: If caller is not an administrator.
+
+---
+
 ## 6. Analytics Endpoints
 
 ### 6.1 Get Turnout & Aggregate Candidate Tallies
