@@ -13,6 +13,18 @@ import app.database as app_db
 from app.config import settings
 settings.ENVIRONMENT = "test"
 
+# StaticPool ensures all threads/sessions share the same in-memory SQLite database
+test_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+# Rebind app's default SessionLocal and engine to test_engine BEFORE importing main app
+app_db.engine = test_engine
+app_db.SessionLocal = TestingSessionLocal
+
 from app.database import Base, get_db, install_db_triggers
 from app.main import app
 from app.models import (
@@ -23,18 +35,6 @@ from app.models import (
     UserRole,
 )
 from app.security import create_access_token, hash_password
-
-# StaticPool ensures all threads/sessions share the same in-memory SQLite database
-test_engine = create_engine(
-    "sqlite:///:memory:",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
-
-# Rebind app's default SessionLocal and engine to test_engine
-app_db.engine = test_engine
-app_db.SessionLocal = TestingSessionLocal
 
 
 @pytest.fixture(autouse=True)

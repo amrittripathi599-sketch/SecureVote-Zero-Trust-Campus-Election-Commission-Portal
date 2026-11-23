@@ -7,17 +7,26 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Normalize database URL for SQLAlchemy 2.0 (e.g. postgres:// -> postgresql://)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 # Configure DB Engine with dialect-specific options
 connect_args = {}
 engine_kwargs = {}
 
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 else:
-    engine_kwargs = {"pool_pre_ping": True}
+    engine_kwargs = {
+        "pool_pre_ping": True,
+        "pool_size": 10,
+        "max_overflow": 20,
+    }
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    db_url,
     connect_args=connect_args,
     **engine_kwargs
 )
@@ -25,7 +34,7 @@ engine = create_engine(
 # Enable Foreign Key enforcement for SQLite (disabled by default in SQLite)
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    if settings.DATABASE_URL.startswith("sqlite"):
+    if db_url.startswith("sqlite"):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import SessionLocal, init_db
+import app.database as app_db
 from app.models import (
     Candidate,
     Election,
@@ -89,7 +89,7 @@ def sync_admin_name(db: Session = None):
     """
     close_db = False
     if db is None:
-        db = SessionLocal()
+        db = app_db.SessionLocal()
         close_db = True
 
     try:
@@ -111,8 +111,8 @@ def seed_database(db: Session = None):
     """
     close_db = False
     if db is None:
-        init_db()
-        db = SessionLocal()
+        app_db.init_db()
+        db = app_db.SessionLocal()
         close_db = True
 
     try:

@@ -66,11 +66,12 @@ async def security_headers_middleware(request: Request, call_next):
 
 
 # ---------------------------------------------------------------------------
-# Strict CORS Policy (Explicit Allowed Origin from Config)
+# Strict CORS Policy (Explicit Allowed Origins from Config)
 # ---------------------------------------------------------------------------
+cors_origins = [orig.strip() for orig in settings.FRONTEND_ORIGIN.split(",") if orig.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_ORIGIN],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -100,5 +101,16 @@ def health_check():
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
+        "port": settings.PORT
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=settings.PORT,
+        reload=(settings.ENVIRONMENT == "development")
+    )

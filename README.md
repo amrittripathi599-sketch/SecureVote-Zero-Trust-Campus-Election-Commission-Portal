@@ -1,6 +1,6 @@
 # SecureVote — Zero-Trust Campus Election & Audit Portal
 
-[![Backend Tests](https://img.shields.io/badge/pytest-20%20passed-emerald)](https://docs.pytest.org)
+[![Backend Tests](https://img.shields.io/badge/pytest-24%20passed-emerald)](https://docs.pytest.org)
 [![Frontend Build](https://img.shields.io/badge/vite-v5.4.21-teal)](https://vitejs.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue)](https://www.typescriptlang.org)
 [![Security Standard](https://img.shields.io/badge/Zero--Trust-3NF%20Secrecy-purple)](./docs/ARCHITECTURE.md)
@@ -79,7 +79,7 @@ When starting the application with an empty database, the automated seed script 
 
 | Role | Roll Number | Password | Notes |
 | :--- | :--- | :--- | :--- |
-| **Election Commissioner** | `ADMIN001` | `Admin@123` | Full admin privileges (Create elections, manage candidates, view audit logs, view turnout charts) |
+| **Election Commissioner** | `ADMIN001` | `Admin@123` | Mr. Amrit Tripathi (Full admin privileges: Create elections, declare/resume results, add voters, manage candidates, view audit logs, turnout charts) |
 | **Student Voter 1** | `STU001` | `Voter@123` | Aarav Sharma (Nominated for Council President) |
 | **Student Voter 2** | `STU002` | `Voter@123` | Bhavna Patel (Nominated for Vice President) |
 | **Student Voter 3** | `STU003` | `Voter@123` | Chirag Verma (Nominated for General Secretary) |
@@ -90,46 +90,81 @@ When starting the application with an empty database, the automated seed script 
 
 ---
 
-## 🚀 Local Development Setup
+## 💻 Local Development (Zero-Config, SQLite)
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+ and npm
+For local development and testing, **no Azure account or Azure environment variables are required**. The application defaults to SQLite and transparent local disk storage (`uploads/`).
 
-### 1. Backend Setup
+### 1. Backend Setup (Local)
 ```bash
-# Navigate to backend
+# 1. Navigate to backend directory
 cd backend
 
-# Create and activate virtual environment
-python -m venv .venv
-
+# 2. Activate Python virtual environment
 # Windows Powershell:
 .\.venv\Scripts\Activate.ps1
-# Linux/macOS:
+# Linux / macOS:
 # source .venv/bin/activate
 
-# Install dependencies
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# Start backend server (starts on http://localhost:8000)
+# 4. Start development server (defaults to port 8000, reads PORT env var if set)
 uvicorn app.main:app --reload --port 8000
 ```
-- Swagger Interactive Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Health Check: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+- Interactive Swagger API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Health Probe: [http://localhost:8000/api/health](http://localhost:8000/api/health)
 
-### 2. Frontend Setup
+### 2. Frontend Setup (Local)
 ```bash
-# Navigate to frontend (in a second terminal)
+# Navigate to frontend (in a separate terminal)
 cd frontend
 
-# Install dependencies
+# Install Node packages
 npm install
 
-# Start Vite development server
+# Start Vite dev server (runs on http://localhost:5173)
 npm run dev
 ```
-- Frontend Web App: [http://localhost:5173](http://localhost:5173)
+Open your browser at **[http://localhost:5173](http://localhost:5173)** to access the portal.
+
+---
+
+## ☁️ Azure Production Deployment
+
+In production, SecureVote runs as a zero-trust cloud solution across Azure services:
+- **Compute**: Azure App Service (Linux, Python 3.11 runtime, running Uvicorn on `$PORT`).
+- **Frontend**: Azure Static Web Apps (React 18 + Vite, client-side routing via `staticwebapp.config.json`).
+- **Database**: Azure Database for PostgreSQL Flexible Server (v15+, with `sslmode=require`).
+- **Secret Governance**: Azure Key Vault with Managed Identity (`DefaultAzureCredential`).
+- **File Storage**: Azure Blob Storage (private `manifestos` container).
+
+> For detailed step-by-step CLI setup commands, firewall rules, and role assignments, see [docs/AZURE_DEPLOYMENT.md](./docs/AZURE_DEPLOYMENT.md).
+
+### Azure Production Environment Variables
+
+#### Backend (Azure App Service Configuration)
+| Variable | Production Value / Placeholder | Description |
+| :--- | :--- | :--- |
+| `ENVIRONMENT` | `production` | Enforces zero-trust checks (PostgreSQL and Azure Blob Storage required). |
+| `PORT` | `8000` | Port injected by Azure App Service container host. |
+| `KEY_VAULT_URL` | `https://<vault-name>.vault.azure.net/` | Optional: Loads `DATABASE_URL`, `JWT_SECRET`, and `AZURE_STORAGE_CONNECTION_STRING` via Managed Identity. |
+| `FRONTEND_ORIGIN` | `https://<app>.azurestaticapps.net` | Strict CORS allowed origin. |
+| `AZURE_CONTAINER_NAME`| `manifestos` | Private container for candidate manifesto PDFs. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | JWT token lifespan. |
+| `LOGIN_RATE_LIMIT_ATTEMPTS` | `5` | Maximum failed logins before throttling. |
+| `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | `10` | Rate limiting rolling window. |
+
+#### Azure Key Vault Secrets (Managed Identity Protected)
+| Secret Name in Key Vault | Target Setting | Description |
+| :--- | :--- | :--- |
+| `DATABASE-URL` | `DATABASE_URL` | PostgreSQL connection string (`postgresql+psycopg2://<user>:<password>@<host>:5432/securevote?sslmode=require`). |
+| `JWT-SECRET` | `JWT_SECRET` | 32+ character cryptographic secret for signing voter tokens. |
+| `AZURE-STORAGE-CONNECTION-STRING` | `AZURE_STORAGE_CONNECTION_STRING` | Primary connection string for Azure Blob Storage. |
+
+#### Frontend (Azure Static Web Apps Build Setting)
+| Variable | Value / Placeholder | Description |
+| :--- | :--- | :--- |
+| `VITE_API_BASE_URL` | `https://<backend-app>.azurewebsites.net` | Base URL used by Axios at build time. |
 
 ---
 
@@ -145,12 +180,12 @@ cd backend
 pytest -v
 ```
 **Test Results Summary**:
+- `test_voting.py`: 4 tests passed (Successful anonymous vote, double-voting prevention 409, admin 403, mid-transaction atomicity & rollback)
+- `test_admin.py`: 9 tests passed (Voter RBAC block 403, election create & update, candidate nomination, PDF magic byte check, audit logs, turnout analytics, declare-result lifecycle, resume election lifecycle, add voter lifecycle & batch creation)
 - `test_auth.py`: 5 tests passed (Valid login, invalid password 401, profile /me, unauthorized 403, 5-attempt rate limit 429)
 - `test_elections.py`: 3 tests passed (List elections, election detail, candidate rosters)
-- `test_voting.py`: 4 tests passed (Successful anonymous vote, double-voting prevention 409, admin 403, mid-transaction atomicity & rollback)
-- `test_admin.py`: 5 tests passed (Voter RBAC block 403, election create & update, candidate nomination, PDF magic byte check, audit logs, turnout analytics)
 - `test_immutability.py`: 3 tests passed (Direct UPDATE on `votes_ledger` aborted, direct DELETE aborted, `audit_logs` update aborted)
-- **Total**: **20 passed in 2.35s**
+- **Total**: **24 passed in 2.25s**
 
 ### 2. Frontend Typecheck & Production Build
 ```bash
@@ -161,47 +196,18 @@ npm run build
 
 ---
 
-## ⚙️ Environment Variables Table
+## 🤖 CI/CD Workflow (.github/workflows/deploy-backend.yml)
 
-### Backend (`backend/.env`)
-| Variable | Default | Required in Production | Description |
-| :--- | :--- | :--- | :--- |
-| `ENVIRONMENT` | `development` | Yes (`production`) | Application runtime environment |
-| `DATABASE_URL` | `sqlite:///./securevote.db` | Yes | PostgreSQL connection string (`postgresql://...`) |
-| `JWT_SECRET` | `INSECURE_DEV...` | Yes (Min 32 chars) | Cryptographic signing key for JWT tokens |
-| `JWT_ALGORITHM` | `HS256` | No | JWT signing algorithm |
-| `ACCESS_TOKEN_EXPIRE_MINUTES`| `60` | No | Access token lifespan in minutes |
-| `FRONTEND_ORIGIN` | `http://localhost:5173` | Yes | Allowed CORS origin (URL of deployed frontend) |
-| `AZURE_STORAGE_CONNECTION_STRING` | *empty* | Optional | Connection string for Azure Blob Storage |
-| `AZURE_CONTAINER_NAME` | `manifestos` | Optional | Azure Blob container name |
-| `UPLOAD_DIR` | `uploads` | No | Fallback directory for local storage |
-| `MAX_UPLOAD_SIZE_BYTES` | `5242880` (5 MB) | No | Maximum file size for candidate manifestos |
-
-### Frontend (`frontend/.env`)
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | `http://localhost:8000` | Backend API base URL |
-
----
-
-## 📦 Deployment Instructions
-
-### 1. Backend Deployment (Render / Docker)
-- Deploy directly to **Render** using the included `render.yaml` blueprint. Render provisions a PostgreSQL database and auto-configures `DATABASE_URL`.
-- Or build and run via Docker:
-```bash
-docker build -t securevote-backend backend/
-docker run -p 8000:8000 -e ENVIRONMENT=production -e JWT_SECRET=your_32_character_secret_key_here securevote-backend
-```
-
-### 2. Frontend Deployment (Vercel / Netlify)
-- **Vercel**: Connect the repository, set root directory to `frontend`, and configure `VITE_API_BASE_URL`. `vercel.json` ensures SPA route rewrites.
-- **Netlify**: Connect repository, set base to `frontend`, build command `npm run build`, and publish directory `dist`. `netlify.toml` handles routing.
+On every push to `main`, GitHub Actions:
+1. Runs the complete backend test suite (`pytest -v`).
+2. Packages backend dependencies into `.python_packages`.
+3. Deploys to Azure App Service using `${{ secrets.AZURE_WEBAPP_NAME }}` and `${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}`.
 
 ---
 
 ## 📚 Technical Documentation Index
 
+- [docs/AZURE_DEPLOYMENT.md](./docs/AZURE_DEPLOYMENT.md): Comprehensive Azure App Service, PostgreSQL, Key Vault, and Blob Storage guide.
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): Deep-dive into 3NF schema, ballot secrecy, and transaction atomicity.
 - [docs/API.md](./docs/API.md): Complete REST API contract with request/response examples and error schemas.
 - [docs/STRIDE_THREAT_MODEL.md](./docs/STRIDE_THREAT_MODEL.md): STRIDE threat assessment with implemented mitigations.

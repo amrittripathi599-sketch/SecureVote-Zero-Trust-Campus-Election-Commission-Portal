@@ -128,4 +128,9 @@ def get_storage_service() -> StorageService:
             connection_string=settings.AZURE_STORAGE_CONNECTION_STRING,
             container_name=settings.AZURE_CONTAINER_NAME
         )
+    if settings.ENVIRONMENT.lower() == "production":
+        raise ValueError(
+            "FATAL ZERO-TRUST CONFIGURATION: Azure Blob Storage is required in production! "
+            "AZURE_STORAGE_CONNECTION_STRING must be configured via environment variable or Azure Key Vault."
+        )
     return LocalStorageService(upload_dir=settings.UPLOAD_DIR)

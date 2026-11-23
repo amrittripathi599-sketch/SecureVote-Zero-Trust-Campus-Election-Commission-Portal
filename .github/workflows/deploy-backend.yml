@@ -1,0 +1,85 @@
+name: Build, Test, and Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Continuous Integration & Automated Verification
+  # ---------------------------------------------------------------------------
+  test:
+    name: Backend Test Suite (Pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements.txt'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Backend Pytest Verification
+        env:
+          PYTHONPATH: .
+          ENVIRONMENT: test
+        run: |
+          cd backend
+          python -m pytest -v
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: Continuous Deployment to Azure App Service
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Azure App Service
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check Azure Configuration
+        if: env.AZURE_WEBAPP_NAME == ''
+        run: |
+          echo "AZURE_WEBAPP_NAME secret is not configured in GitHub repository secrets yet."
+          echo "Skipping Azure App Service deployment step."
+
+      - name: Set up Python 3.11
+        if: env.AZURE_WEBAPP_NAME != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare Deployment Artifact
+        if: env.AZURE_WEBAPP_NAME != ''
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install --target=".python_packages/lib/site-packages" -r requirements.txt
+
+      - name: Deploy to Azure Web App
+        if: env.AZURE_WEBAPP_NAME != ''
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: './backend'
