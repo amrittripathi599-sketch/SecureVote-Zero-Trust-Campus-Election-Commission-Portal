@@ -66,3 +66,7 @@ dist-ssr/
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Evaluation & Local Study Documents
+*.pdf
+SecureVote_Practical_Evaluation_and_Viva_Defense_Manual.pdf
