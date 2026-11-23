@@ -66,12 +66,13 @@ async def security_headers_middleware(request: Request, call_next):
 
 
 # ---------------------------------------------------------------------------
-# Strict CORS Policy (Explicit Allowed Origins from Config)
+# Strict CORS Policy (Explicit Allowed Origins from Config + Vercel Domains)
 # ---------------------------------------------------------------------------
 cors_origins = [orig.strip() for orig in settings.FRONTEND_ORIGIN.split(",") if orig.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
