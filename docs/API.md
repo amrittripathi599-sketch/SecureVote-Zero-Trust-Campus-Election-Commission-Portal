@@ -334,7 +334,7 @@ Uploads manifesto to Azure Blob Storage (or local storage). Enforces 5 MB limit,
   [
     {
       "roll_number": "ADMIN001",
-      "full_name": "Dr. Eleanor Vance",
+      "full_name": "Mr. Amrit Tripathi",
       "user_id": 1,
       "role": "admin",
       "has_voted": false,
@@ -342,6 +342,55 @@ Uploads manifesto to Azure Blob Storage (or local storage). Enforces 5 MB limit,
     }
   ]
   ```
+
+---
+
+### 5.7 Declare Election Result
+Finalizes the election, closes voting permanently in an atomic database transaction, tallies candidate votes from the anonymous `votes_ledger`, persists certified results (`declared_at`, `winner_candidate_id`), and logs an immutable audit event (`declare_result`).
+
+- **Method**: `POST`
+- **Route**: `/api/admin/elections/{election_id}/declare-result`
+- **Auth**: Bearer Token (`role: "admin"` only)
+- **Responses**:
+  - `200 OK`:
+  ```json
+  {
+    "election_id": 1,
+    "title": "Student Council 2026",
+    "status": "closed",
+    "declared_at": "2026-11-23T12:00:00",
+    "winner": {
+      "candidate_id": 1,
+      "candidate_name": "Aarav Sharma",
+      "position": "Council President",
+      "votes_count": 2
+    },
+    "candidate_tallies": [
+      {
+        "candidate_id": 1,
+        "candidate_name": "Aarav Sharma",
+        "roll_number": "STU001",
+        "position": "Council President",
+        "slogan": "Progress through Transparency",
+        "votes_count": 2
+      },
+      {
+        "candidate_id": 2,
+        "candidate_name": "Bhavna Patel",
+        "roll_number": "STU002",
+        "position": "Vice President",
+        "slogan": "Innovation and Inclusivity",
+        "votes_count": 1
+      }
+    ],
+    "total_eligible_voters": 5,
+    "total_voted": 3,
+    "turnout_percentage": 60.0
+  }
+  ```
+  - `403 Forbidden`: If called by a voter or unauthenticated caller.
+  - `404 Not Found`: If `election_id` does not exist.
+  - `409 Conflict`: If results have already been declared (`{"detail": "Result already declared."}`).
 
 ---
 

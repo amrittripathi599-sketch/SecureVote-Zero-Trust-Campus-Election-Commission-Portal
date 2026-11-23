@@ -16,7 +16,9 @@ import {
   Filter,
   RefreshCw,
   Search,
+  Trophy,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import {
   AuditLog,
@@ -29,6 +31,7 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorBanner } from '../components/ErrorBanner';
 
 export const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'elections' | 'candidates' | 'audit' | 'users'>('elections');
   const [elections, setElections] = useState<Election[]>([]);
   const [users, setUsers] = useState<UserType[]>([]);
@@ -41,6 +44,10 @@ export const AdminDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Declare Result modal state
+  const [electionToDeclare, setElectionToDeclare] = useState<Election | null>(null);
+  const [isDeclaring, setIsDeclaring] = useState<boolean>(false);
 
   // Candidate Nomination form state
   const [selectedElectionId, setSelectedElectionId] = useState<number | ''>('');
@@ -114,6 +121,30 @@ export const AdminDashboard: React.FC = () => {
       setElections(res.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to update election status.');
+    }
+  };
+
+  const handleDeclareResult = async () => {
+    if (!electionToDeclare) return;
+    setIsDeclaring(true);
+    setError(null);
+    try {
+      const res = await apiClient.post(`/api/admin/elections/${electionToDeclare.election_id}/declare-result`);
+      const winnerName = res.data.winner?.candidate_name || 'No winner (0 votes cast)';
+      setSuccessMessage(`Election "${res.data.election_title}" result declared! Winner: ${winnerName}.`);
+      setElectionToDeclare(null);
+      // Reload elections
+      const elRes = await apiClient.get<Election[]>('/api/elections');
+      setElections(elRes.data);
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+        setError('Result already declared.');
+      } else {
+        setError(err.response?.data?.detail || 'Failed to declare election result.');
+      }
+      setElectionToDeclare(null);
+    } finally {
+      setIsDeclaring(false);
     }
   };
 
@@ -211,7 +242,7 @@ export const AdminDashboard: React.FC = () => {
             </h1>
           </div>
           <p className="text-sm text-slate-500">
-            Zero-trust administrative control, candidate certification, and append-only audit monitoring.
+            Welcome, <strong className="text-slate-800 font-semibold">{user?.full_name || 'Mr. Amrit Tripathi'}</strong> &bull; Zero-trust administrative control, candidate certification, and append-only audit monitoring.
           </p>
         </div>
 
@@ -310,31 +341,53 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => toggleElectionStatus(elec)}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-                      elec.status === 'open'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                    }`}
-                  >
-                    {elec.status === 'open' ? (
-                      <>
-                        <ToggleRight className="w-4 h-4 text-amber-600" />
-                        <span>Close Polls</span>
-                      </>
+                <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={() => toggleElectionStatus(elec)}
+                      className={`flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                        elec.status === 'open'
+                          ? 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {elec.status === 'open' ? (
+                        <>
+                          <ToggleRight className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Close Polls</span>
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Open Polls</span>
+                        </>
+                      )}
+                    </button>
+
+                    {elec.declared_at || elec.is_declared ? (
+                      <button
+                        disabled
+                        className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                        title="Result declared"
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Result declared</span>
+                      </button>
                     ) : (
-                      <>
-                        <ToggleLeft className="w-4 h-4 text-emerald-600" />
-                        <span>Open Polls</span>
-                      </>
+                      <button
+                        onClick={() => setElectionToDeclare(elec)}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors shadow-sm"
+                        title="Declare final result and certify winner"
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Declare Result</span>
+                      </button>
                     )}
-                  </button>
+                  </div>
 
                   <Link
                     to={`/admin/results/${elec.election_id}`}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors"
+                    className="flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors"
                   >
                     <BarChart3 className="w-3.5 h-3.5" />
                     <span>View Turnout</span>
@@ -712,6 +765,58 @@ export const AdminDashboard: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Declare Result Confirm Dialog */}
+      {electionToDeclare && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6">
+            <div className="flex items-center space-x-3 text-amber-600">
+              <div className="p-2.5 bg-amber-50 rounded-xl">
+                <Trophy className="w-6 h-6 text-amber-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Declare Election Result</h3>
+            </div>
+
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Declaring the result will close this election. Votes can no longer be cast. Continue?
+            </p>
+
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <div className="font-semibold text-slate-800">Target Election:</div>
+              <p className="font-bold text-slate-900">{electionToDeclare.title} (#{electionToDeclare.election_id})</p>
+              <p className="text-[11px] text-slate-500">
+                This will finalize the vote counts from the immutable ledger, certify the winner, and permanently close balloting.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setElectionToDeclare(null)}
+                disabled={isDeclaring}
+                className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeclareResult}
+                disabled={isDeclaring}
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+              >
+                {isDeclaring ? (
+                  <span>Declaring Result...</span>
+                ) : (
+                  <>
+                    <Trophy className="w-4 h-4" />
+                    <span>Confirm & Declare</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

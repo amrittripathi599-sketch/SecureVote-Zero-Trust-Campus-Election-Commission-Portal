@@ -170,7 +170,7 @@ export const Login: React.FC = () => {
                 onClick={() => fillDemoAccount('ADMIN001', 'Admin@123')}
                 className="px-2.5 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
               >
-                <div className="font-semibold">Election Officer</div>
+                <div className="font-semibold">Mr. Amrit Tripathi (Admin)</div>
                 <div className="text-[11px] font-mono text-purple-500">ADMIN001</div>
               </button>
 

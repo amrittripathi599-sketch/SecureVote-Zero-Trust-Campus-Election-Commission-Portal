@@ -6,15 +6,18 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_client_ip, require_admin
-from app.models import AuditLog, Candidate, Election, ElectionParticipation, User, UserRole
+from app.models import AuditLog, Candidate, Election, ElectionParticipation, ElectionStatus, User, UserRole, VotesLedger
 from app.schemas import (
     AuditLogResponse,
     CandidateCreateRequest,
     CandidateResponse,
+    DeclareResultResponse,
+    DeclaredWinnerInfo,
     ElectionCreateRequest,
     ElectionResponse,
     ElectionUpdateRequest,
     PaginatedAuditLogsResponse,
+    TurnoutCandidateTally,
     UserResponse,
 )
 from app.services.storage import get_storage_service
@@ -123,6 +126,142 @@ def update_election(
     res = ElectionResponse.model_validate(election)
     res.candidate_count = cand_count
     return res
+
+
+@router.post("/elections/{election_id}/declare-result", response_model=DeclareResultResponse)
+def declare_election_result(
+    election_id: int,
+    request: Request,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Officially declares the election result.
+    - Rejects with 403 if non-admin (enforced by require_admin).
+    - Rejects with 409 Conflict if result is already declared.
+    - Sets election status to 'closed'.
+    - Computes final tally per candidate from votes_ledger (anonymous aggregates).
+    - Determines winner candidate, persists declared_at and winner_candidate_id on election.
+    - Writes an immutable audit log entry with action 'declare_result'.
+    - Returns winner, per-candidate tallies, and turnout percentage.
+    """
+    election = db.execute(
+        select(Election).where(Election.election_id == election_id)
+    ).scalar_one_or_none()
+
+    if not election:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Election ID {election_id} not found."
+        )
+
+    # 409 Conflict if already declared
+    if election.declared_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Result already declared."
+        )
+
+    now = datetime.utcnow()
+
+    # a) Set election status to 'closed'
+    election.status = ElectionStatus.closed
+
+    # b) Compute final tallies from votes_ledger (aggregate counts only, no voter IDs)
+    candidates = db.execute(
+        select(Candidate, User)
+        .join(User, Candidate.user_id == User.user_id)
+        .where(Candidate.election_id == election_id)
+        .order_by(Candidate.candidate_id.asc())
+    ).all()
+
+    vote_counts = dict(
+        db.execute(
+            select(VotesLedger.candidate_id, func.count(VotesLedger.vote_id))
+            .where(VotesLedger.election_id == election_id)
+            .group_by(VotesLedger.candidate_id)
+        ).all()
+    )
+
+    total_eligible = db.execute(
+        select(func.count(User.user_id)).where(User.role == UserRole.voter)
+    ).scalar() or 0
+
+    total_voted = db.execute(
+        select(func.count(ElectionParticipation.user_id)).where(
+            ElectionParticipation.election_id == election_id
+        )
+    ).scalar() or 0
+
+    turnout_pct = round((total_voted / total_eligible * 100), 2) if total_eligible > 0 else 0.0
+
+    candidate_tallies = []
+    winner_cand = None
+    max_votes = -1
+
+    for cand, cand_user in candidates:
+        votes = vote_counts.get(cand.candidate_id, 0)
+        tally = TurnoutCandidateTally(
+            candidate_id=cand.candidate_id,
+            candidate_name=cand_user.full_name,
+            roll_number=cand_user.roll_number,
+            position=cand.position,
+            slogan=cand.slogan,
+            votes_count=votes
+        )
+        candidate_tallies.append(tally)
+
+        if votes > max_votes:
+            max_votes = votes
+            winner_cand = cand
+
+    # c) Store the result (declared_at and winner_candidate_id)
+    election.declared_at = now
+    if winner_cand and max_votes > 0:
+        election.winner_candidate_id = winner_cand.candidate_id
+    else:
+        election.winner_candidate_id = winner_cand.candidate_id if winner_cand else None
+
+    # d) Write audit log entry with action "declare_result"
+    winner_name = winner_cand.user.full_name if (winner_cand and winner_cand.user) else "None"
+    audit_entry = AuditLog(
+        user_id=admin_user.user_id,
+        action="declare_result",
+        status="success",
+        timestamp=now,
+        ip_address=get_client_ip(request),
+        details=f"Result declared for election '{election.title}' (ID {election_id}). Winner: {winner_name} with {max(0, max_votes)} votes. Turnout: {turnout_pct}%."
+    )
+    db.add(audit_entry)
+
+    # Commit all changes in one database transaction
+    db.commit()
+    db.refresh(election)
+
+    # Construct winner response info
+    winner_info = None
+    if winner_cand:
+        winner_user = winner_cand.user
+        winner_info = DeclaredWinnerInfo(
+            candidate_id=winner_cand.candidate_id,
+            candidate_name=winner_user.full_name if winner_user else "",
+            roll_number=winner_user.roll_number if winner_user else "",
+            position=winner_cand.position,
+            slogan=winner_cand.slogan,
+            votes_count=max(0, max_votes)
+        )
+
+    return DeclareResultResponse(
+        election_id=election.election_id,
+        election_title=election.title,
+        status=election.status,
+        declared_at=now,
+        winner=winner_info,
+        candidate_tallies=candidate_tallies,
+        total_eligible_voters=total_eligible,
+        total_voted=total_voted,
+        turnout_percentage=turnout_pct
+    )
 
 
 @router.post("/candidates", response_model=CandidateResponse)

@@ -96,7 +96,7 @@ export const App: React.FC = () => {
                 SecureVote &bull; Zero-Trust Campus Election & Audit Portal
               </span>
               <span className="text-slate-400 font-mono">
-                CS Semester Project &bull; 3NF Anonymous Ledger
+                3NF Anonymous Ledger &bull; Immutable Audit Logs
               </span>
             </div>
           </footer>

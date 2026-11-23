@@ -123,3 +123,72 @@ def test_admin_turnout_analytics(client, admin_token, voter_token):
     # Verify candidate 1 tally
     tally_c1 = next(c for c in data["candidate_tallies"] if c["candidate_id"] == 1)
     assert tally_c1["votes_count"] == 1
+
+
+def test_declare_result_lifecycle_and_security(client, admin_token, voter_token, voter2_token):
+    """
+    Verifies the Declare Result feature:
+    1. Voter gets 403 Forbidden when attempting to declare result.
+    2. Admin successfully declares result -> status becomes 'closed', returns winner and tallies.
+    3. Declaring result twice returns 409 Conflict ('Result already declared.').
+    4. Votes cast after declaring result are rejected (election is closed).
+    5. Audit log entry is written with action='declare_result'.
+    """
+    # 1. Cast a vote first so there is a winner
+    vote_res = client.post(
+        "/api/votes",
+        json={"election_id": 1, "candidate_id": 1},
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert vote_res.status_code == 200
+
+    # 2. Voter attempts to declare result -> must receive 403 Forbidden
+    voter_declare = client.post(
+        "/api/admin/elections/1/declare-result",
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert voter_declare.status_code == 403
+
+    # 3. Admin declares result -> 200 OK
+    admin_declare = client.post(
+        "/api/admin/elections/1/declare-result",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert admin_declare.status_code == 200
+    declared_data = admin_declare.json()
+    assert declared_data["status"] == "closed"
+    assert declared_data["declared_at"] is not None
+    assert declared_data["winner"] is not None
+    assert declared_data["winner"]["candidate_id"] == 1
+    assert declared_data["winner"]["candidate_name"] == "Student One"
+    assert declared_data["winner"]["votes_count"] == 1
+    assert declared_data["turnout_percentage"] > 0
+
+    # 4. Declaring twice gives 409 Conflict
+    dup_declare = client.post(
+        "/api/admin/elections/1/declare-result",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert dup_declare.status_code == 409
+    assert "Result already declared" in dup_declare.json()["detail"]
+
+    # 5. Subsequent vote attempts after declaring are rejected because election is closed
+    late_vote = client.post(
+        "/api/votes",
+        json={"election_id": 1, "candidate_id": 2},
+        headers={"Authorization": f"Bearer {voter2_token}"}
+    )
+    assert late_vote.status_code == 400
+    assert "closed" in late_vote.json()["detail"].lower()
+
+    # 6. Verify audit logs record the declare_result action
+    logs_res = client.get(
+        "/api/admin/audit-logs?action=declare_result",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert logs_res.status_code == 200
+    items = logs_res.json()["items"]
+    assert len(items) >= 1
+    assert items[0]["action"] == "declare_result"
+    assert items[0]["status"] == "success"
+    assert "Student One" in items[0]["details"]

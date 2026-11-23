@@ -25,6 +25,10 @@ export interface Election {
   created_by: number;
   candidate_count?: number;
   has_current_user_voted?: boolean;
+  declared_at?: string | null;
+  winner_candidate_id?: number | null;
+  is_declared?: boolean;
+  winner_name?: string | null;
 }
 
 export interface Candidate {
@@ -76,6 +80,15 @@ export interface CandidateTally {
   votes_count: number;
 }
 
+export interface DeclaredWinner {
+  candidate_id?: number | null;
+  candidate_name?: string | null;
+  roll_number?: string | null;
+  position?: string | null;
+  slogan?: string | null;
+  votes_count: number;
+}
+
 export interface TurnoutAnalytics {
   election_id: number;
   election_title: string;
@@ -84,4 +97,8 @@ export interface TurnoutAnalytics {
   total_voted: number;
   turnout_percentage: number;
   candidate_tallies: CandidateTally[];
+  declared_at?: string | null;
+  winner_candidate_id?: number | null;
+  winner?: DeclaredWinner | null;
+  is_declared?: boolean;
 }

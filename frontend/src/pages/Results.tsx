@@ -9,6 +9,7 @@ import {
   Clock,
   ShieldCheck,
   Percent,
+  Trophy,
 } from 'lucide-react';
 import {
   BarChart,
@@ -109,6 +110,46 @@ export const Results: React.FC = () => {
       </div>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
+
+      {/* Declared Winner Card (When Result is Declared) */}
+      {(analytics.is_declared || analytics.declared_at) && (
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden animate-fade-in">
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                <Trophy className="w-4 h-4 text-yellow-200" />
+                <span>Certified Official Winner</span>
+              </div>
+              <div className="text-xs text-yellow-100 font-medium">
+                Declared: {new Date(analytics.declared_at!).toLocaleString()}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-2">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+                  {analytics.winner?.candidate_name || 'No Winner (0 Votes Recorded)'}
+                </h2>
+                <p className="text-yellow-100 text-sm font-semibold mt-1">
+                  {analytics.winner?.position} &bull; Roll Number: {analytics.winner?.roll_number}
+                </p>
+                {analytics.winner?.slogan && (
+                  <p className="text-white/80 text-xs italic mt-2">"{analytics.winner.slogan}"</p>
+                )}
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 text-center sm:text-right min-w-[150px]">
+                <div className="text-3xl sm:text-4xl font-black text-white">
+                  {analytics.winner?.votes_count || 0}
+                </div>
+                <div className="text-xs font-bold text-yellow-200 uppercase tracking-wider mt-0.5">
+                  Winning Votes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

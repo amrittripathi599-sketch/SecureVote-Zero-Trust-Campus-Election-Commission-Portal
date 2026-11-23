@@ -2,7 +2,7 @@ import os
 import pytest
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -40,16 +40,22 @@ app_db.SessionLocal = TestingSessionLocal
 @pytest.fixture(autouse=True)
 def setup_and_seed_test_db():
     """Drops, recreates, and seeds fresh tables with triggers for every test."""
+    with test_engine.connect() as conn:
+        conn.execute(text("PRAGMA foreign_keys = OFF"))
+        conn.commit()
     Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)
     install_db_triggers(test_engine)
+    with test_engine.connect() as conn:
+        conn.execute(text("PRAGMA foreign_keys = ON"))
+        conn.commit()
 
     session = TestingSessionLocal()
     try:
         admin = User(
             user_id=1,
             roll_number="ADMIN001",
-            full_name="Admin Officer",
+            full_name="Mr. Amrit Tripathi",
             password_hash=hash_password("Admin@123"),
             role=UserRole.admin,
             has_voted=False,

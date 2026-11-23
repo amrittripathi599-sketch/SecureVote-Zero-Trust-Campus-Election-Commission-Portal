@@ -12,7 +12,7 @@ from app.models import (
     UserRole,
     VotesLedger,
 )
-from app.schemas import TurnoutAnalyticsResponse, TurnoutCandidateTally
+from app.schemas import DeclaredWinnerInfo, TurnoutAnalyticsResponse, TurnoutCandidateTally
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
@@ -85,6 +85,19 @@ def get_election_turnout_analytics(
             )
         )
 
+    winner_info = None
+    if election.winner_candidate_id:
+        matching_cand = next((c for c in candidate_tallies if c.candidate_id == election.winner_candidate_id), None)
+        if matching_cand:
+            winner_info = DeclaredWinnerInfo(
+                candidate_id=matching_cand.candidate_id,
+                candidate_name=matching_cand.candidate_name,
+                roll_number=matching_cand.roll_number,
+                position=matching_cand.position,
+                slogan=matching_cand.slogan,
+                votes_count=matching_cand.votes_count
+            )
+
     return TurnoutAnalyticsResponse(
         election_id=election.election_id,
         election_title=election.title,
@@ -92,5 +105,9 @@ def get_election_turnout_analytics(
         total_eligible_voters=total_eligible,
         total_voted=total_voted,
         turnout_percentage=turnout_pct,
-        candidate_tallies=candidate_tallies
+        candidate_tallies=candidate_tallies,
+        declared_at=election.declared_at,
+        winner_candidate_id=election.winner_candidate_id,
+        winner=winner_info,
+        is_declared=election.declared_at is not None
     )

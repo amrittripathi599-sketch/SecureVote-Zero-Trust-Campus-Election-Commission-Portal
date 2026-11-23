@@ -110,7 +110,34 @@ def install_db_triggers(target_engine=None):
             conn.commit()
 
 
-def init_db():
-    """Initializes tables and registers triggers."""
-    Base.metadata.create_all(bind=engine)
-    install_db_triggers(engine)
+def check_and_migrate_db(target_engine=None):
+    """
+    Applies schema migrations dynamically for SQLite and PostgreSQL.
+    Ensures 'declared_at' and 'winner_candidate_id' columns exist on 'elections'.
+    """
+    eng = target_engine or engine
+    dialect = eng.dialect.name
+    with eng.connect() as conn:
+        if dialect == "sqlite":
+            res = conn.execute(text("PRAGMA table_info(elections)")).fetchall()
+            col_names = [r[1] for r in res]
+            if col_names:  # table exists
+                if "declared_at" not in col_names:
+                    logger.info("Migrating SQLite: Adding declared_at to elections")
+                    conn.execute(text("ALTER TABLE elections ADD COLUMN declared_at DATETIME"))
+                if "winner_candidate_id" not in col_names:
+                    logger.info("Migrating SQLite: Adding winner_candidate_id to elections")
+                    conn.execute(text("ALTER TABLE elections ADD COLUMN winner_candidate_id INTEGER REFERENCES candidates(candidate_id)"))
+                conn.commit()
+        elif dialect == "postgresql":
+            conn.execute(text("ALTER TABLE elections ADD COLUMN IF NOT EXISTS declared_at TIMESTAMP"))
+            conn.execute(text("ALTER TABLE elections ADD COLUMN IF NOT EXISTS winner_candidate_id INTEGER REFERENCES candidates(candidate_id)"))
+            conn.commit()
+
+
+def init_db(target_engine=None):
+    """Initializes tables, performs schema migrations, and registers triggers."""
+    eng = target_engine or engine
+    Base.metadata.create_all(bind=eng)
+    check_and_migrate_db(eng)
+    install_db_triggers(eng)

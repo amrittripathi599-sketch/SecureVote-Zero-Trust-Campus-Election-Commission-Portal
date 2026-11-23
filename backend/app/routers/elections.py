@@ -45,6 +45,9 @@ def list_elections(
         res = ElectionResponse.model_validate(election)
         res.candidate_count = candidate_counts.get(election.election_id, 0)
         res.has_current_user_voted = election.election_id in voted_elections
+        res.is_declared = election.declared_at is not None
+        if election.winner_candidate_id and election.winner and election.winner.user:
+            res.winner_name = election.winner.user.full_name
         result.append(res)
 
     return result
@@ -81,4 +84,7 @@ def get_election(
     res = ElectionResponse.model_validate(election)
     res.candidate_count = cand_count
     res.has_current_user_voted = has_voted
+    res.is_declared = election.declared_at is not None
+    if election.winner_candidate_id and election.winner and election.winner.user:
+        res.winner_name = election.winner.user.full_name
     return res

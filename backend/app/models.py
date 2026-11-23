@@ -67,12 +67,19 @@ class Election(Base):
     end_time = Column(DateTime, nullable=False)
     status = Column(Enum(ElectionStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=ElectionStatus.draft, index=True)
     created_by = Column(Integer, ForeignKey("users.user_id", ondelete="RESTRICT"), nullable=False, index=True)
+    declared_at = Column(DateTime, nullable=True)
+    winner_candidate_id = Column(
+        Integer,
+        ForeignKey("candidates.candidate_id", use_alter=True, name="fk_election_winner_candidate", ondelete="SET NULL"),
+        nullable=True
+    )
 
     # Relationships
     creator = relationship("User", back_populates="created_elections", foreign_keys=[created_by])
-    candidates = relationship("Candidate", back_populates="election", cascade="all, delete-orphan")
+    candidates = relationship("Candidate", back_populates="election", cascade="all, delete-orphan", foreign_keys="[Candidate.election_id]")
     participations = relationship("ElectionParticipation", back_populates="election", cascade="all, delete-orphan")
     votes = relationship("VotesLedger", back_populates="election", cascade="all, delete-orphan")
+    winner = relationship("Candidate", foreign_keys=[winner_candidate_id], post_update=True)
 
 
 class Candidate(Base):
@@ -90,7 +97,7 @@ class Candidate(Base):
     slogan = Column(String(255), nullable=True)
 
     # Relationships
-    election = relationship("Election", back_populates="candidates")
+    election = relationship("Election", back_populates="candidates", foreign_keys=[election_id])
     user = relationship("User", back_populates="candidacies")
     votes = relationship("VotesLedger", back_populates="candidate")
 

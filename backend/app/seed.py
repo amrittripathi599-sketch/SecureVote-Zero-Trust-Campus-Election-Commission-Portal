@@ -81,10 +81,33 @@ startxref
     return pdf_text.encode("latin-1")
 
 
+def sync_admin_name(db: Session = None):
+    """
+    Zero-Loss Update Step:
+    Checks if ADMIN001 full_name is different from 'Mr. Amrit Tripathi',
+    and updates it in-place without wiping or modifying any existing votes, users, or audit logs.
+    """
+    close_db = False
+    if db is None:
+        db = SessionLocal()
+        close_db = True
+
+    try:
+        admin_user = db.execute(select(User).where(User.roll_number == "ADMIN001")).scalar_one_or_none()
+        if admin_user and admin_user.full_name != "Mr. Amrit Tripathi":
+            admin_user.full_name = "Mr. Amrit Tripathi"
+            db.commit()
+            print("Successfully updated existing ADMIN001 full_name to 'Mr. Amrit Tripathi'")
+    finally:
+        if close_db:
+            db.close()
+
+
 def seed_database(db: Session = None):
     """
     Populates database with initial demonstration accounts, demo election,
     and nominated candidates if the database is currently empty.
+    Also synchronizes existing admin account name to 'Mr. Amrit Tripathi'.
     """
     close_db = False
     if db is None:
@@ -96,7 +119,7 @@ def seed_database(db: Session = None):
         # Check if users already exist
         existing_user = db.execute(select(User).limit(1)).scalar_one_or_none()
         if existing_user is not None:
-            print("Database already contains data. Skipping initial seeding.")
+            sync_admin_name(db)
             return
 
         print("Seeding demo database for SecureVote...")
@@ -105,7 +128,7 @@ def seed_database(db: Session = None):
         admin_user = User(
             roll_number="ADMIN001",
             password_hash=hash_password("Admin@123"),
-            full_name="Dr. Eleanor Vance (Chief Election Officer)",
+            full_name="Mr. Amrit Tripathi",
             role=UserRole.admin,
             has_voted=False,
             created_at=datetime.utcnow()

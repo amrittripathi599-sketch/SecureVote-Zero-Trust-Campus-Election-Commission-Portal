@@ -59,6 +59,10 @@ class ElectionResponse(BaseModel):
     created_by: int
     candidate_count: int = 0
     has_current_user_voted: Optional[bool] = None
+    declared_at: Optional[datetime] = None
+    winner_candidate_id: Optional[int] = None
+    is_declared: bool = False
+    winner_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -140,6 +144,27 @@ class TurnoutCandidateTally(BaseModel):
     votes_count: int
 
 
+class DeclaredWinnerInfo(BaseModel):
+    candidate_id: Optional[int] = None
+    candidate_name: Optional[str] = None
+    roll_number: Optional[str] = None
+    position: Optional[str] = None
+    slogan: Optional[str] = None
+    votes_count: int = 0
+
+
+class DeclareResultResponse(BaseModel):
+    election_id: int
+    election_title: str
+    status: ElectionStatus
+    declared_at: datetime
+    winner: Optional[DeclaredWinnerInfo] = None
+    candidate_tallies: List[TurnoutCandidateTally]
+    total_eligible_voters: int
+    total_voted: int
+    turnout_percentage: float
+
+
 class TurnoutAnalyticsResponse(BaseModel):
     election_id: int
     election_title: str
@@ -148,3 +173,7 @@ class TurnoutAnalyticsResponse(BaseModel):
     total_voted: int
     turnout_percentage: float
     candidate_tallies: List[TurnoutCandidateTally]
+    declared_at: Optional[datetime] = None
+    winner_candidate_id: Optional[int] = None
+    winner: Optional[DeclaredWinnerInfo] = None
+    is_declared: bool = False
