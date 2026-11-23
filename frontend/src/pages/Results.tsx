@@ -11,6 +11,7 @@ import {
   Percent,
   Trophy,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import {
   BarChart,
@@ -29,7 +30,7 @@ import { TurnoutAnalytics } from '../types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { ErrorBanner } from '../components/ErrorBanner';
 
-const COLORS = ['#0d9488', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981'];
+const COLORS = ['#10b981', '#06b6d4', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6'];
 
 export const Results: React.FC = () => {
   const { electionId } = useParams<{ electionId: string }>();
@@ -81,7 +82,7 @@ export const Results: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="py-20">
+      <div className="py-24 flex items-center justify-center">
         <LoadingSpinner message="Aggregating anonymous ballots from votes ledger..." size="lg" />
       </div>
     );
@@ -89,12 +90,12 @@ export const Results: React.FC = () => {
 
   if (!analytics) {
     return (
-      <div className="max-w-4xl mx-auto py-12 px-4 text-center">
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800">
+      <div className="max-w-4xl mx-auto py-16 px-4 text-center">
+        <div className="glass-panel p-6 rounded-2xl text-rose-300 border-rose-500/30">
           Analytics data unavailable for this election.
         </div>
-        <Link to="/admin" className="mt-4 inline-flex items-center text-brand-600 font-semibold">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Return to Admin Console
+        <Link to="/admin" className="mt-4 inline-flex items-center text-emerald-400 font-semibold text-xs font-mono">
+          <ArrowLeft className="w-4 h-4 mr-1.5" /> Return to Commission Console
         </Link>
       </div>
     );
@@ -107,29 +108,29 @@ export const Results: React.FC = () => {
   }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-left">
       <div>
         <Link
           to="/admin"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+          className="inline-flex items-center text-xs font-mono text-slate-400 hover:text-emerald-400 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Admin Console
+          <ArrowLeft className="w-4 h-4 mr-1.5" /> BACK TO COMMISSION CONSOLE
         </Link>
       </div>
 
       {/* Header */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-2">
+      <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 space-y-2 relative overflow-hidden">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-            Certified Turnout & Results
+          <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            CERTIFIED TURNOUT &amp; AUDIT TALLY
           </span>
-          <span className="text-xs font-mono text-slate-400">Election #{analytics.election_id}</span>
+          <span className="text-xs font-mono text-slate-400">ELECTION #{analytics.election_id}</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
           {analytics.election_title}
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Aggregated anonymously from the immutable votes ledger. Individual ballot secrecy is mathematically protected.
+        <p className="text-xs text-slate-400">
+          Aggregated anonymously from the immutable PostgreSQL votes ledger. Individual ballot secrecy is mathematically protected.
         </p>
       </div>
 
@@ -137,25 +138,25 @@ export const Results: React.FC = () => {
 
       {/* Declared Winner Card (When Result is Declared) */}
       {(analytics.is_declared || analytics.declared_at) && (
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden animate-fade-in">
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden animate-fade-in border border-yellow-300/30">
           <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-sm">
-                <Trophy className="w-4 h-4 text-yellow-200" />
-                <span>Certified Official Winner</span>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-navy-950/40 backdrop-blur-md border border-white/20 rounded-full text-xs font-mono font-bold uppercase tracking-wider text-yellow-200">
+                <Trophy className="w-4 h-4 text-yellow-300" />
+                <span>CERTIFIED WINNER</span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="text-xs text-yellow-100 font-medium">
+                <div className="text-xs text-yellow-100 font-mono">
                   Declared: {new Date(analytics.declared_at!).toLocaleString()}
                 </div>
                 <button
                   onClick={handleResumeElection}
                   disabled={isResuming}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 bg-navy-950/50 hover:bg-navy-950/70 border border-white/20 text-white rounded-lg text-xs font-mono font-bold transition-all cursor-pointer"
                   title="Revoke declaration and reopen voting"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{isResuming ? 'Resuming...' : 'Accidental? Resume Election'}</span>
+                  <span>{isResuming ? 'Resuming...' : 'Revoke & Resume Election'}</span>
                 </button>
               </div>
             </div>
@@ -165,20 +166,20 @@ export const Results: React.FC = () => {
                 <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
                   {analytics.winner?.candidate_name || 'No Winner (0 Votes Recorded)'}
                 </h2>
-                <p className="text-yellow-100 text-sm font-semibold mt-1">
+                <p className="text-yellow-100 text-xs font-semibold mt-1">
                   {analytics.winner?.position} &bull; Roll Number: {analytics.winner?.roll_number}
                 </p>
                 {analytics.winner?.slogan && (
-                  <p className="text-white/80 text-xs italic mt-2">"{analytics.winner.slogan}"</p>
+                  <p className="text-white/90 text-xs italic mt-2">"{analytics.winner.slogan}"</p>
                 )}
               </div>
 
-              <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 text-center sm:text-right min-w-[150px]">
-                <div className="text-3xl sm:text-4xl font-black text-white">
+              <div className="bg-navy-950/60 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 text-center sm:text-right min-w-[150px]">
+                <div className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono">
                   {analytics.winner?.votes_count || 0}
                 </div>
-                <div className="text-xs font-bold text-yellow-200 uppercase tracking-wider mt-0.5">
-                  Winning Votes
+                <div className="text-[10px] font-mono font-bold text-yellow-200 uppercase tracking-wider mt-0.5">
+                  Winning Ballots
                 </div>
               </div>
             </div>
@@ -188,33 +189,33 @@ export const Results: React.FC = () => {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-brand-50 text-brand-600 rounded-xl">
+        <div className="glass-panel rounded-3xl p-6 flex items-center space-x-4 border border-white/10">
+          <div className="p-3 bg-blue-500/15 text-blue-400 rounded-2xl border border-blue-500/30">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Eligible Voters</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{analytics.total_eligible_voters}</p>
+            <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">Eligible Voters</p>
+            <p className="text-2xl font-extrabold text-white mt-0.5">{analytics.total_eligible_voters}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+        <div className="glass-panel rounded-3xl p-6 flex items-center space-x-4 border border-white/10">
+          <div className="p-3 bg-emerald-500/15 text-emerald-400 rounded-2xl border border-emerald-500/30">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ballots Cast</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1">{analytics.total_voted}</p>
+            <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">Ballots Cast</p>
+            <p className="text-2xl font-extrabold text-white mt-0.5">{analytics.total_voted}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+        <div className="glass-panel rounded-3xl p-6 flex items-center space-x-4 border border-white/10">
+          <div className="p-3 bg-purple-500/15 text-purple-400 rounded-2xl border border-purple-500/30">
             <Percent className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Turnout Percentage</p>
-            <p className="text-2xl font-extrabold text-indigo-600 mt-1">{analytics.turnout_percentage}%</p>
+            <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">Voter Turnout</p>
+            <p className="text-2xl font-extrabold text-purple-400 mt-0.5 font-mono">{analytics.turnout_percentage}%</p>
           </div>
         </div>
       </div>
@@ -222,115 +223,71 @@ export const Results: React.FC = () => {
       {/* Recharts Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Bar Chart */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center space-x-2">
-            <BarChart3 className="w-5 h-5 text-brand-600" />
-            <h2 className="text-base font-bold text-slate-900">Votes Per Candidate (Tally)</h2>
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4 border border-white/10">
+          <div className="flex items-center space-x-2 text-emerald-400">
+            <BarChart3 className="w-5 h-5" />
+            <h2 className="text-base font-bold text-white">Votes Per Candidate (Tally)</h2>
           </div>
           <div className="h-72 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 20 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-15} textAnchor="end" />
-                <YAxis allowDecimals={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} interval={0} angle={-15} textAnchor="end" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <Tooltip
                   formatter={(value: any) => [`${value} votes`, 'Votes']}
-                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                  contentStyle={{
+                    borderRadius: '12px',
+                    background: '#070b14',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#f8fafc',
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '12px',
+                  }}
                 />
-                <Bar dataKey="votes" fill="#0d9488" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="votes" fill="#10b981" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Pie Chart */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex items-center space-x-2">
-            <PieIcon className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-base font-bold text-slate-900">Vote Distribution Share</h2>
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4 border border-white/10">
+          <div className="flex items-center space-x-2 text-cyan-400">
+            <PieIcon className="w-5 h-5" />
+            <h2 className="text-base font-bold text-white">Vote Distribution Share</h2>
           </div>
           <div className="h-72 w-full pt-4">
-            {analytics.total_voted === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-                No votes recorded yet for this election.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="votes"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={85}
-                    label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={false}
-                  >
-                    {chartData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: any) => [`${value} votes`, 'Votes']}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0' }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={85}
+                  dataKey="votes"
+                >
+                  {chartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: any) => [`${value} votes`, 'Share']}
+                  contentStyle={{
+                    borderRadius: '12px',
+                    background: '#070b14',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#f8fafc',
+                    fontFamily: 'JetBrains Mono',
+                    fontSize: '12px',
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
-      </div>
-
-      {/* Detailed Tally Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <h2 className="text-base font-bold text-slate-900">Certified Tally Breakdown</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-y border-slate-200">
-              <tr>
-                <th className="py-3 px-4">Candidate Name</th>
-                <th className="py-3 px-4">Roll Number</th>
-                <th className="py-3 px-4">Office / Position</th>
-                <th className="py-3 px-4">Campaign Slogan</th>
-                <th className="py-3 px-4 text-right">Votes Count</th>
-                <th className="py-3 px-4 text-right">Vote Share (%)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {analytics.candidate_tallies.map((cand) => {
-                const share =
-                  analytics.total_voted > 0
-                    ? ((cand.votes_count / analytics.total_voted) * 100).toFixed(1)
-                    : '0.0';
-
-                return (
-                  <tr key={cand.candidate_id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">{cand.candidate_name}</td>
-                    <td className="py-3.5 px-4 font-mono text-slate-500">{cand.roll_number}</td>
-                    <td className="py-3.5 px-4 font-semibold text-brand-700">{cand.position}</td>
-                    <td className="py-3.5 px-4 text-slate-600 italic">"{cand.slogan || '—'}"</td>
-                    <td className="py-3.5 px-4 font-extrabold text-slate-900 text-right font-mono text-sm">
-                      {cand.votes_count}
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-indigo-600 text-right font-mono text-sm">
-                      {share}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Audit & Secrecy Footer */}
-      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500 flex items-center space-x-2">
-        <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-        <span>
-          Zero-Trust Assurance: The votes ledger contains NO voter identifiers. These tallies are calculated
-          strictly through anonymous SQL aggregation.
-        </span>
       </div>
     </div>
   );

@@ -4,25 +4,25 @@ import { ShieldAlert, Home } from 'lucide-react';
 
 export const NotFound: React.FC = () => {
   return (
-    <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 text-center shadow-lg space-y-6">
-        <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+    <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="max-w-md w-full glass-panel-elevated rounded-3xl border border-white/10 p-8 text-center shadow-2xl space-y-6">
+        <div className="mx-auto w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-emerald-400">
           <ShieldAlert className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">404</h1>
-          <p className="text-base font-bold text-slate-800">Page Not Found</p>
-          <p className="text-sm text-slate-500">
-            The requested cryptographic portal resource does not exist or has been retired.
+          <h1 className="text-4xl font-extrabold text-white tracking-tight font-mono">404</h1>
+          <p className="text-base font-bold text-slate-200">Cryptographic Resource Not Found</p>
+          <p className="text-xs text-slate-400">
+            The requested election tribunal endpoint or page does not exist or has been retired.
           </p>
         </div>
         <div>
           <Link
             to="/"
-            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-md transition-colors"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 shadow-glow transition-all"
           >
             <Home className="w-4 h-4" />
-            <span>Return to Homepage</span>
+            <span>Return to Portal</span>
           </Link>
         </div>
       </div>

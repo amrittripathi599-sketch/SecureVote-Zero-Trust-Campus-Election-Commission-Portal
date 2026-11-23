@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Calendar, Clock, Vote, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Clock, Vote, ShieldCheck, Sparkles } from 'lucide-react';
 import apiClient from '../api/client';
 import { ErrorBanner } from '../components/ErrorBanner';
 
@@ -8,7 +8,6 @@ export const CreateElection: React.FC = () => {
   const navigate = useNavigate();
 
   const now = new Date();
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const formatDatetimeForInput = (d: Date) => {
@@ -59,25 +58,25 @@ export const CreateElection: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-fade-in text-left">
       <div>
         <Link
           to="/admin"
-          className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+          className="inline-flex items-center text-xs font-mono text-slate-400 hover:text-emerald-400 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Admin Console
+          <ArrowLeft className="w-4 h-4 mr-1.5" /> BACK TO COMMISSION CONSOLE
         </Link>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-sm space-y-6">
+      <div className="glass-panel-elevated rounded-3xl p-6 sm:p-10 space-y-6 relative overflow-hidden">
         <div className="space-y-1">
-          <div className="flex items-center space-x-2 text-brand-600">
+          <div className="flex items-center space-x-2 text-emerald-400">
             <Vote className="w-6 h-6" />
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
               Schedule New Campus Election
             </h1>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-400">
             Configure the polling timeline, official position, and zero-trust ballot lifecycle.
           </p>
         </div>
@@ -86,7 +85,7 @@ export const CreateElection: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-2">
               Election Title
             </label>
             <input
@@ -95,13 +94,13 @@ export const CreateElection: React.FC = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Computer Science Department Senate 2026"
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500 transition-colors"
+              className="glass-input w-full px-4 py-3 rounded-xl text-xs placeholder:text-slate-600 focus:text-white"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-2">
                 Voting Opens (Start Time)
               </label>
               <input
@@ -109,12 +108,12 @@ export const CreateElection: React.FC = () => {
                 required
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500 font-mono"
+                className="glass-input w-full px-4 py-3 rounded-xl text-xs font-mono focus:text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-2">
                 Voting Closes (Deadline)
               </label>
               <input
@@ -122,46 +121,46 @@ export const CreateElection: React.FC = () => {
                 required
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500 font-mono"
+                className="glass-input w-full px-4 py-3 rounded-xl text-xs font-mono focus:text-white"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-2">
               Initial Status
             </label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500"
+              className="glass-input w-full px-4 py-3 rounded-xl text-xs focus:text-white"
             >
-              <option value="open">Open (Immediate student participation allowed)</option>
-              <option value="draft">Draft (Private setup mode)</option>
+              <option value="open" className="bg-navy-950 text-white">Open (Immediate student participation enabled)</option>
+              <option value="draft" className="bg-navy-950 text-white">Draft (Private setup mode)</option>
             </select>
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-1">
-            <div className="font-semibold text-slate-800 flex items-center space-x-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <div className="p-4 bg-slate-900/80 rounded-2xl border border-white/10 text-xs text-slate-400 space-y-1">
+            <div className="font-semibold text-white flex items-center space-x-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>Immutable Election Genesis:</span>
             </div>
             <p>
-              Once created, election creation is committed to the append-only audit trail with the administrator's ID and timestamp.
+              Once created, election creation is committed to the append-only audit trail in Azure PostgreSQL with Chief Officer credentials and timestamp.
             </p>
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-2">
             <Link
               to="/admin"
-              className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+              className="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-slate-300 hover:bg-white/5 transition-colors"
             >
               Cancel
             </Link>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center space-x-2"
+              className="px-6 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 text-navy-950 font-extrabold text-xs rounded-xl shadow-glow transition-all flex items-center space-x-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <span>Publishing Election...</span>

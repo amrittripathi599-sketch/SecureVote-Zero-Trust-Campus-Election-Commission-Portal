@@ -352,54 +352,56 @@ export const AdminDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="py-20">
-        <LoadingSpinner message="Securing administrative connection..." size="lg" />
+      <div className="py-24 flex items-center justify-center">
+        <LoadingSpinner message="Securing administrative connection to tribunal ledger..." size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-left">
       {/* Admin Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <ShieldAlert className="w-6 h-6 text-brand-600" />
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Campus Election Commission Portal
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 glass-panel-elevated p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="space-y-1.5">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-white">
+              Campus Election Commission Tribunal
             </h1>
           </div>
-          <p className="text-sm text-slate-500">
-            Welcome, <strong className="text-slate-800 font-semibold">{user?.full_name || 'Mr. Amrit Tripathi'}</strong> &bull; Zero-trust administrative control, candidate certification, and append-only audit monitoring.
+          <p className="text-xs text-slate-400">
+            Chief Officer: <strong className="text-amber-300 font-mono">{user?.full_name || 'Mr. Amrit Tripathi'}</strong> &bull; Zero-trust administrative control, candidate certification &amp; append-only audit monitoring.
           </p>
         </div>
 
         <Link
           to="/admin/elections/new"
-          className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-all"
+          className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl font-extrabold text-xs text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 shadow-glow transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>New Election</span>
+          <span>Schedule Election</span>
         </Link>
       </div>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
 
       {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold flex items-center justify-between">
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-2xl text-xs font-semibold flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <CheckCircle className="w-5 h-5 text-emerald-400" />
             <span>{successMessage}</span>
           </div>
-          <button onClick={() => setSuccessMessage(null)} className="text-emerald-600 font-bold text-xs">
+          <button onClick={() => setSuccessMessage(null)} className="text-emerald-400 font-bold text-xs cursor-pointer">
             Dismiss
           </button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
-        <nav className="flex space-x-6 overflow-x-auto pb-1">
+      <div className="border-b border-white/10 pb-2">
+        <nav className="flex space-x-2 overflow-x-auto">
           {[
             { id: 'elections', label: 'Elections & Controls', icon: Vote },
             { id: 'candidates', label: 'Candidate Nominations & PDFs', icon: Users },
@@ -412,10 +414,10 @@ export const AdminDashboard: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-3 px-1 border-b-2 font-semibold text-sm whitespace-nowrap flex items-center space-x-2 transition-colors ${
+                className={`py-2 px-3.5 rounded-xl font-bold text-xs whitespace-nowrap flex items-center space-x-2 transition-all cursor-pointer ${
                   isActive
-                    ? 'border-brand-600 text-brand-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
+                    ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -433,60 +435,60 @@ export const AdminDashboard: React.FC = () => {
             {elections.map((elec) => (
               <div
                 key={elec.election_id}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+                className="glass-panel rounded-3xl border border-white/10 p-6 shadow-xl hover:border-emerald-500/30 transition-all flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span
-                      className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                      className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
                         elec.status === 'open'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                           : elec.status === 'closed'
-                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                          : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                          : 'bg-slate-800 text-slate-400 border-white/10'
                       }`}
                     >
                       {elec.status}
                     </span>
-                    <span className="text-xs font-mono text-slate-400">ID: #{elec.election_id}</span>
+                    <span className="text-xs font-mono text-slate-500">ID: #{elec.election_id}</span>
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-900">{elec.title}</h3>
+                  <h3 className="text-lg font-bold text-white">{elec.title}</h3>
 
-                  <div className="space-y-1.5 text-xs text-slate-500">
+                  <div className="space-y-1.5 text-xs font-mono text-slate-400">
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       <span>Starts: {new Date(elec.start_time).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       <span>Ends: {new Date(elec.end_time).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Users className="w-3.5 h-3.5 text-slate-400" />
+                      <Users className="w-3.5 h-3.5 text-slate-500" />
                       <span>{elec.candidate_count || 0} Registered Candidates</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-1.5">
                     <button
                       onClick={() => toggleElectionStatus(elec)}
-                      className={`flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                      className={`flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
                         elec.status === 'open'
-                          ? 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          ? 'bg-slate-900 text-slate-300 border-white/10 hover:bg-slate-800'
+                          : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
                       }`}
                     >
                       {elec.status === 'open' ? (
                         <>
-                          <ToggleRight className="w-3.5 h-3.5 text-slate-500" />
+                          <ToggleRight className="w-3.5 h-3.5 text-slate-400" />
                           <span>Close Polls</span>
                         </>
                       ) : (
                         <>
-                          <ToggleLeft className="w-3.5 h-3.5 text-emerald-600" />
+                          <ToggleLeft className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Open Polls</span>
                         </>
                       )}
@@ -496,7 +498,7 @@ export const AdminDashboard: React.FC = () => {
                       <>
                         <button
                           disabled
-                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-white/10 bg-slate-900 text-slate-500 cursor-not-allowed"
                           title="Result declared"
                         >
                           <Trophy className="w-3.5 h-3.5 text-amber-500" />
@@ -514,20 +516,20 @@ export const AdminDashboard: React.FC = () => {
                               setResumeNewEndTime('');
                             }
                           }}
-                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
+                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-indigo-500/30 bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 transition-colors shadow-sm cursor-pointer"
                           title="Resume election if accidentally declared"
                         >
-                          <RotateCcw className="w-3.5 h-3.5 text-indigo-600" />
+                          <RotateCcw className="w-3.5 h-3.5 text-indigo-400" />
                           <span>Resume</span>
                         </button>
                       </>
                     ) : (
                       <button
                         onClick={() => setElectionToDeclare(elec)}
-                        className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors shadow-sm"
+                        className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-500/30 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 transition-colors shadow-sm cursor-pointer"
                         title="Declare final result and certify winner"
                       >
-                        <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                        <Trophy className="w-3.5 h-3.5 text-amber-400" />
                         <span>Declare Result</span>
                       </button>
                     )}
@@ -535,7 +537,7 @@ export const AdminDashboard: React.FC = () => {
 
                   <Link
                     to={`/admin/results/${elec.election_id}`}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-lg transition-colors"
+                    className="flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg transition-colors"
                   >
                     <BarChart3 className="w-3.5 h-3.5" />
                     <span>View Turnout</span>
@@ -551,26 +553,26 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'candidates' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Nominate Candidate Form */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="glass-panel rounded-3xl border border-white/10 p-6 sm:p-8 shadow-xl space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">1. Nominate Approved Candidate</h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <h2 className="text-lg font-bold text-white">1. Nominate Approved Candidate</h2>
+              <p className="text-xs text-slate-400 mt-1">
                 Link an eligible registered student to an election with an official position and slogan.
               </p>
             </div>
 
             <form onSubmit={handleAddCandidate} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Target Election
                 </label>
                 <select
                   value={selectedElectionId}
                   onChange={(e) => setSelectedElectionId(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500"
+                  className="glass-input w-full px-3 py-2.5 rounded-xl text-xs focus:text-white"
                 >
                   {elections.map((el) => (
-                    <option key={el.election_id} value={el.election_id}>
+                    <option key={el.election_id} value={el.election_id} className="bg-navy-950 text-white">
                       #{el.election_id} - {el.title} ({el.status})
                     </option>
                   ))}
@@ -578,17 +580,17 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Select Student
                 </label>
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500 font-mono"
+                  className="glass-input w-full px-3 py-2.5 rounded-xl text-xs font-mono focus:text-white"
                 >
-                  <option value="">-- Choose a student voter --</option>
+                  <option value="" className="bg-navy-950 text-white">-- Choose a student voter --</option>
                   {voterUsers.map((u) => (
-                    <option key={u.user_id} value={u.user_id}>
+                    <option key={u.user_id} value={u.user_id} className="bg-navy-950 text-white">
                       {u.roll_number} - {u.full_name}
                     </option>
                   ))}
@@ -596,7 +598,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Position / Office
                 </label>
                 <input
@@ -605,12 +607,12 @@ export const AdminDashboard: React.FC = () => {
                   value={candidatePosition}
                   onChange={(e) => setCandidatePosition(e.target.value)}
                   placeholder="e.g. Council President, Vice President"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500"
+                  className="glass-input w-full px-3 py-2.5 rounded-xl text-xs focus:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Campaign Slogan / Vision
                 </label>
                 <input
@@ -618,14 +620,14 @@ export const AdminDashboard: React.FC = () => {
                   value={candidateSlogan}
                   onChange={(e) => setCandidateSlogan(e.target.value)}
                   placeholder="e.g. Transparency, Inclusion, & Innovation"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500"
+                  className="glass-input w-full px-3 py-2.5 rounded-xl text-xs focus:text-white"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isAddingCandidate}
-                className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 text-navy-950 font-extrabold text-xs rounded-xl shadow-glow transition-all flex items-center justify-center space-x-2 cursor-pointer"
               >
                 {isAddingCandidate ? (
                   <span>Registering Candidate...</span>
@@ -640,17 +642,17 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Upload Manifesto Form */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="glass-panel rounded-3xl border border-white/10 p-6 sm:p-8 shadow-xl space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">2. Upload Candidate Manifesto PDF</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Uploads manifesto to Azure Blob Storage (or local storage). Validates %PDF magic signature.
+              <h2 className="text-lg font-bold text-white">2. Upload Candidate Manifesto PDF</h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Uploads manifesto to cloud storage with %PDF magic signature validation.
               </p>
             </div>
 
             <form onSubmit={handleManifestoUpload} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Candidate ID
                 </label>
                 <input
@@ -659,12 +661,12 @@ export const AdminDashboard: React.FC = () => {
                   value={uploadCandidateId}
                   onChange={(e) => setUploadCandidateId(Number(e.target.value))}
                   placeholder="Enter candidate ID (e.g. 1, 2, 3)"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-brand-500 focus:border-brand-500 font-mono"
+                  className="glass-input w-full px-3 py-2.5 rounded-xl text-xs font-mono focus:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold font-mono text-slate-300 uppercase tracking-wider mb-1">
                   Policy Manifesto PDF Document
                 </label>
                 <input
@@ -672,17 +674,17 @@ export const AdminDashboard: React.FC = () => {
                   required
                   accept="application/pdf"
                   onChange={(e) => setManifestoFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"
+                  className="glass-input w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30 cursor-pointer"
                 />
-                <span className="text-[11px] text-slate-400 mt-1 block">
+                <span className="text-[11px] font-mono text-slate-500 mt-1 block">
                   Accepted format: .pdf only, maximum 5 MB. Verified by file magic byte inspection.
                 </span>
               </div>
 
               {uploadProgress > 0 && (
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/5">
                   <div
-                    className="bg-brand-600 h-full transition-all duration-300"
+                    className="bg-emerald-500 h-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -691,14 +693,14 @@ export const AdminDashboard: React.FC = () => {
               <button
                 type="submit"
                 disabled={isUploading}
-                className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl shadow-sm transition-colors flex items-center justify-center space-x-2"
+                className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white border border-white/10 font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center space-x-2 cursor-pointer"
               >
                 {isUploading ? (
                   <span>Uploading Manifesto ({uploadProgress}%)...</span>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    <span>Upload & Certify PDF</span>
+                    <span>Upload &amp; Certify PDF</span>
                   </>
                 )}
               </button>
@@ -709,12 +711,17 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 3: Audit Trail */}
       {activeTab === 'audit' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div className="glass-panel rounded-3xl border border-white/10 shadow-xl overflow-hidden space-y-4 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Tamper-Evident Security Logs</h2>
-              <p className="text-xs text-slate-500">
-                Total events tracked: {auditTotal}. Protected by immutable database triggers.
+              <h2 className="text-lg font-bold text-white flex items-center space-x-2">
+                <span>Tamper-Evident Security Logs</span>
+                <span className="text-xs font-mono font-normal text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                  {auditTotal} Events
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Protected by PostgreSQL strict BEFORE UPDATE/DELETE immutability triggers.
               </p>
             </div>
 
@@ -728,15 +735,15 @@ export const AdminDashboard: React.FC = () => {
                     setAuditActionFilter(e.target.value);
                     setAuditPage(1);
                   }}
-                  className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs"
+                  className="glass-input px-3 py-1.5 rounded-lg text-xs"
                 >
-                  <option value="">All Actions</option>
-                  <option value="auth.login">auth.login</option>
-                  <option value="vote.cast">vote.cast</option>
-                  <option value="admin.election.create">admin.election.create</option>
-                  <option value="admin.election.update">admin.election.update</option>
-                  <option value="admin.candidate.add">admin.candidate.add</option>
-                  <option value="admin.manifesto.upload">admin.manifesto.upload</option>
+                  <option value="" className="bg-navy-950 text-white">All Actions</option>
+                  <option value="auth.login" className="bg-navy-950 text-white">auth.login</option>
+                  <option value="vote.cast" className="bg-navy-950 text-white">vote.cast</option>
+                  <option value="admin.election.create" className="bg-navy-950 text-white">admin.election.create</option>
+                  <option value="admin.election.update" className="bg-navy-950 text-white">admin.election.update</option>
+                  <option value="admin.candidate.add" className="bg-navy-950 text-white">admin.candidate.add</option>
+                  <option value="admin.manifesto.upload" className="bg-navy-950 text-white">admin.manifesto.upload</option>
                 </select>
               </div>
 
@@ -746,16 +753,16 @@ export const AdminDashboard: React.FC = () => {
                   setAuditStatusFilter(e.target.value);
                   setAuditPage(1);
                 }}
-                className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs"
+                className="glass-input px-3 py-1.5 rounded-lg text-xs"
               >
-                <option value="">All Statuses</option>
-                <option value="success">Success</option>
-                <option value="failure">Failure</option>
+                <option value="" className="bg-navy-950 text-white">All Statuses</option>
+                <option value="success" className="bg-navy-950 text-white">Success</option>
+                <option value="failure" className="bg-navy-950 text-white">Failure</option>
               </select>
 
               <button
                 onClick={() => loadAuditLogs(auditPage, auditActionFilter, auditStatusFilter)}
-                className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 hover:bg-slate-50"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer"
                 title="Refresh audit logs"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -765,7 +772,7 @@ export const AdminDashboard: React.FC = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-y border-slate-200">
+              <thead className="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-mono font-semibold border-y border-white/10">
                 <tr>
                   <th className="py-3 px-4">Log ID</th>
                   <th className="py-3 px-4">Timestamp</th>
@@ -776,37 +783,37 @@ export const AdminDashboard: React.FC = () => {
                   <th className="py-3 px-4">Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/5 font-mono text-slate-300">
                 {auditLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
+                    <td colSpan={7} className="py-8 text-center text-slate-500 font-mono">
                       No audit log records match the current filters.
                     </td>
                   </tr>
                 ) : (
                   auditLogs.map((log) => (
-                    <tr key={log.log_id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-slate-500">#{log.log_id}</td>
-                      <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                    <tr key={log.log_id} className="hover:bg-white/5 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-500">#{log.log_id}</td>
+                      <td className="py-3 px-4 text-slate-400 whitespace-nowrap">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 font-mono font-semibold text-brand-700">{log.action}</td>
+                      <td className="py-3 px-4 font-semibold text-emerald-400">{log.action}</td>
                       <td className="py-3 px-4">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
                             log.status === 'success'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-rose-100 text-rose-800'
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                              : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                           }`}
                         >
                           {log.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-700">
+                      <td className="py-3 px-4 text-slate-300">
                         {log.roll_number || (log.user_id ? `User #${log.user_id}` : 'Anonymous')}
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-400">{log.ip_address || '127.0.0.1'}</td>
-                      <td className="py-3 px-4 text-slate-600 max-w-xs truncate" title={log.details || ''}>
+                      <td className="py-3 px-4 text-slate-500">{log.ip_address || '127.0.0.1'}</td>
+                      <td className="py-3 px-4 text-slate-400 max-w-xs truncate" title={log.details || ''}>
                         {log.details || '—'}
                       </td>
                     </tr>
@@ -817,22 +824,22 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-            <span className="text-xs text-slate-500">
+          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+            <span className="text-xs font-mono text-slate-400">
               Showing page {auditPage} of {Math.max(1, Math.ceil(auditTotal / 15))}
             </span>
             <div className="flex space-x-2">
               <button
                 disabled={auditPage <= 1}
                 onClick={() => setAuditPage((p) => p - 1)}
-                className="px-3 py-1 border border-slate-200 rounded-lg text-xs font-semibold disabled:opacity-40"
+                className="px-3 py-1 border border-white/10 rounded-lg text-xs font-semibold text-slate-300 disabled:opacity-30 cursor-pointer"
               >
                 Previous
               </button>
               <button
                 disabled={auditPage >= Math.ceil(auditTotal / 15)}
                 onClick={() => setAuditPage((p) => p + 1)}
-                className="px-3 py-1 border border-slate-200 rounded-lg text-xs font-semibold disabled:opacity-40"
+                className="px-3 py-1 border border-white/10 rounded-lg text-xs font-semibold text-slate-300 disabled:opacity-30 cursor-pointer"
               >
                 Next
               </button>
@@ -843,11 +850,11 @@ export const AdminDashboard: React.FC = () => {
 
       {/* TAB 4: Institutional Directory */}
       {activeTab === 'users' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Institutional Voter & Admin Directory</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-lg font-bold text-white">Institutional Voter &amp; Admin Directory</h2>
+              <p className="text-xs text-slate-400">
                 Zero-Trust Audit: Verified users with global voting flags. Password hashes are never transmitted.
               </p>
             </div>
@@ -860,14 +867,14 @@ export const AdminDashboard: React.FC = () => {
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
                   placeholder="Search roll number or name..."
-                  className="pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:ring-brand-500 focus:border-brand-500"
+                  className="glass-input pl-9 pr-4 py-2 rounded-xl text-xs focus:text-white"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsAddVoterModalOpen(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-all whitespace-nowrap"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 shadow-glow transition-all whitespace-nowrap cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Add Voter</span>
@@ -877,7 +884,7 @@ export const AdminDashboard: React.FC = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-y border-slate-200">
+              <thead className="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-mono font-semibold border-y border-white/10">
                 <tr>
                   <th className="py-3 px-4">User ID</th>
                   <th className="py-3 px-4">Roll Number</th>
@@ -887,18 +894,18 @@ export const AdminDashboard: React.FC = () => {
                   <th className="py-3 px-4">Registered Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/5 font-mono text-slate-300">
                 {filteredUsers.map((u) => (
-                  <tr key={u.user_id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-slate-500">#{u.user_id}</td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-900">{u.roll_number}</td>
-                    <td className="py-3 px-4 font-medium text-slate-700">{u.full_name}</td>
+                  <tr key={u.user_id} className="hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-4 font-bold text-slate-500">#{u.user_id}</td>
+                    <td className="py-3 px-4 font-bold text-white">{u.roll_number}</td>
+                    <td className="py-3 px-4 font-sans font-medium text-slate-200">{u.full_name}</td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
                           u.role === 'admin'
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                         }`}
                       >
                         {u.role}
@@ -906,18 +913,18 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="py-3 px-4">
                       {u.has_voted ? (
-                        <span className="flex items-center space-x-1 text-emerald-700 font-semibold">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="flex items-center space-x-1 text-emerald-400 font-semibold">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Has Voted</span>
                         </span>
                       ) : (
-                        <span className="flex items-center space-x-1 text-slate-400">
-                          <XCircle className="w-3.5 h-3.5 text-slate-300" />
+                        <span className="flex items-center space-x-1 text-slate-500">
+                          <XCircle className="w-3.5 h-3.5 text-slate-600" />
                           <span>Pending</span>
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-slate-500">
+                    <td className="py-3 px-4 text-slate-400">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -930,22 +937,22 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Declare Result Confirm Dialog */}
       {electionToDeclare && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6">
-            <div className="flex items-center space-x-3 text-amber-600">
-              <div className="p-2.5 bg-amber-50 rounded-xl">
-                <Trophy className="w-6 h-6 text-amber-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel-elevated rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-white/15 space-y-6">
+            <div className="flex items-center space-x-3 text-amber-400">
+              <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <Trophy className="w-6 h-6 text-amber-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Declare Election Result</h3>
+              <h3 className="text-lg font-bold text-white">Declare Election Result</h3>
             </div>
 
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               Declaring the result will close this election. Votes can no longer be cast. Continue?
             </p>
 
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-              <div className="font-semibold text-slate-800">Target Election:</div>
-              <p className="font-bold text-slate-900">{electionToDeclare.title} (#{electionToDeclare.election_id})</p>
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/10 text-xs text-slate-400 space-y-1 font-mono">
+              <div className="font-semibold text-white">Target Election:</div>
+              <p className="font-bold text-emerald-400">{electionToDeclare.title} (#{electionToDeclare.election_id})</p>
               <p className="text-[11px] text-slate-500">
                 This will finalize the vote counts from the immutable ledger, certify the winner, and permanently close balloting.
               </p>
@@ -956,7 +963,7 @@ export const AdminDashboard: React.FC = () => {
                 type="button"
                 onClick={() => setElectionToDeclare(null)}
                 disabled={isDeclaring}
-                className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                className="px-4 py-2.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -964,14 +971,14 @@ export const AdminDashboard: React.FC = () => {
                 type="button"
                 onClick={handleDeclareResult}
                 disabled={isDeclaring}
-                className="px-5 py-2.5 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+                className="px-5 py-2.5 text-xs font-extrabold text-navy-950 bg-gradient-to-r from-amber-400 to-yellow-300 hover:from-amber-300 rounded-xl shadow-glow transition-all flex items-center space-x-2 cursor-pointer"
               >
                 {isDeclaring ? (
                   <span>Declaring Result...</span>
                 ) : (
                   <>
                     <Trophy className="w-4 h-4" />
-                    <span>Confirm & Declare</span>
+                    <span>Confirm &amp; Declare</span>
                   </>
                 )}
               </button>
@@ -982,38 +989,38 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Resume Election Confirmation Modal */}
       {electionToResume && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center space-x-3 text-indigo-600">
-              <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
+        <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-panel-elevated rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-white/15 space-y-6">
+            <div className="flex items-center space-x-3 text-indigo-400">
+              <div className="p-3 bg-indigo-500/15 rounded-2xl border border-indigo-500/30">
                 <RotateCcw className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Resume Election</h3>
-                <p className="text-xs text-slate-500">Revoke accidental result declaration</p>
+                <h3 className="text-lg font-bold text-white">Resume Election</h3>
+                <p className="text-xs text-slate-400">Revoke accidental result declaration</p>
               </div>
             </div>
 
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Resuming this election will revoke the declared result, restore the status to <strong className="text-slate-800">Open</strong>, and allow eligible students to continue casting ballots. All previously cast votes are strictly preserved.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Resuming this election will revoke the declared result, restore the status to <strong className="text-white">Open</strong>, and allow eligible students to continue casting ballots. All previously cast votes are strictly preserved.
             </p>
 
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-              <div className="font-semibold text-slate-800">Target Election:</div>
-              <p className="font-bold text-slate-900">{electionToResume.title} (#{electionToResume.election_id})</p>
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/10 text-xs text-slate-400 space-y-1 font-mono">
+              <div className="font-semibold text-white">Target Election:</div>
+              <p className="font-bold text-indigo-300">{electionToResume.title} (#{electionToResume.election_id})</p>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-700">
+            <div className="space-y-1.5 font-mono">
+              <label className="block text-xs font-semibold text-slate-300">
                 Voting Deadline (Optional Extension):
               </label>
               <input
                 type="datetime-local"
                 value={resumeNewEndTime}
                 onChange={(e) => setResumeNewEndTime(e.target.value)}
-                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="glass-input w-full text-xs px-3 py-2 rounded-xl focus:text-white"
               />
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 font-sans">
                 Specify a new deadline if the previous deadline expired, or leave blank to automatically extend by 24 hours if needed.
               </p>
             </div>
@@ -1023,7 +1030,7 @@ export const AdminDashboard: React.FC = () => {
                 type="button"
                 onClick={() => setElectionToResume(null)}
                 disabled={isResuming}
-                className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                className="px-4 py-2.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1031,14 +1038,14 @@ export const AdminDashboard: React.FC = () => {
                 type="button"
                 onClick={handleResumeElection}
                 disabled={isResuming}
-                className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+                className="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-glow transition-all flex items-center space-x-2 cursor-pointer"
               >
                 {isResuming ? (
                   <span>Resuming Election...</span>
                 ) : (
                   <>
                     <RotateCcw className="w-4 h-4" />
-                    <span>Confirm & Resume</span>
+                    <span>Confirm &amp; Resume</span>
                   </>
                 )}
               </button>
@@ -1049,28 +1056,28 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Add Voter Modal */}
       {isAddVoterModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-panel-elevated rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-white/15 space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 text-brand-600">
-                <div className="p-3 bg-brand-50 rounded-2xl border border-brand-100">
+              <div className="flex items-center space-x-3 text-emerald-400">
+                <div className="p-3 bg-emerald-500/15 rounded-2xl border border-emerald-500/30">
                   <UserPlus className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Register Eligible Voter</h3>
-                  <p className="text-xs text-slate-500">Zero-Trust Credential Provisioning</p>
+                  <h3 className="text-lg font-bold text-white">Register Eligible Voter</h3>
+                  <p className="text-xs text-slate-400">Zero-Trust Credential Provisioning</p>
                 </div>
               </div>
 
               {/* Mode Toggle: Single vs Bulk */}
-              <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+              <div className="flex bg-slate-900 border border-white/10 p-1 rounded-xl text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => setVoterModalMode('single')}
-                  className={`px-3 py-1 rounded-lg transition-colors ${
+                  className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
                     voterModalMode === 'single'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
+                      ? 'bg-emerald-500 text-navy-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Single
@@ -1078,10 +1085,10 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setVoterModalMode('bulk')}
-                  className={`px-3 py-1 rounded-lg transition-colors ${
+                  className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
                     voterModalMode === 'bulk'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
+                      ? 'bg-emerald-500 text-navy-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   Bulk CSV
@@ -1093,8 +1100,8 @@ export const AdminDashboard: React.FC = () => {
               {voterModalMode === 'single' ? (
                 <>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Roll Number <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Roll Number <span className="text-rose-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -1102,13 +1109,13 @@ export const AdminDashboard: React.FC = () => {
                       value={newVoterRoll}
                       onChange={(e) => setNewVoterRoll(e.target.value)}
                       placeholder="e.g. STU006"
-                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none uppercase font-mono"
+                      className="glass-input w-full text-xs px-3.5 py-2.5 rounded-xl uppercase font-mono focus:text-white"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Full Name <span className="text-rose-500">*</span>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Full Name <span className="text-rose-400">*</span>
                     </label>
                     <input
                       type="text"
@@ -1116,12 +1123,12 @@ export const AdminDashboard: React.FC = () => {
                       value={newVoterName}
                       onChange={(e) => setNewVoterName(e.target.value)}
                       placeholder="e.g. Kabir Sharma"
-                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="glass-input w-full text-xs px-3.5 py-2.5 rounded-xl focus:text-white"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
+                    <label className="block text-xs font-semibold text-slate-300">
                       Initial Password
                     </label>
                     <input
@@ -1130,16 +1137,16 @@ export const AdminDashboard: React.FC = () => {
                       value={newVoterPassword}
                       onChange={(e) => setNewVoterPassword(e.target.value)}
                       placeholder="Default: Voter@123"
-                      className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono"
+                      className="glass-input w-full text-xs px-3.5 py-2.5 rounded-xl font-mono focus:text-white"
                     />
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-500">
                       Password will be securely hashed with bcrypt prior to database insertion.
                     </p>
                   </div>
                 </>
               ) : (
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-slate-700">
+                  <label className="block text-xs font-semibold text-slate-300">
                     Paste Voters (One per line: RollNumber, FullName, Password)
                   </label>
                   <textarea
@@ -1147,27 +1154,27 @@ export const AdminDashboard: React.FC = () => {
                     value={bulkVoterText}
                     onChange={(e) => setBulkVoterText(e.target.value)}
                     placeholder={`STU006, Kabir Sharma, Voter@123\nSTU007, Priya Verma, Voter@123`}
-                    className="w-full text-xs font-mono px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="glass-input w-full text-xs font-mono px-3.5 py-2.5 rounded-xl focus:text-white"
                   />
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 font-mono">
                     Format: <code>RollNumber, Full Name, Password</code>. Duplicates are safely skipped.
                   </p>
                 </div>
               )}
 
-              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
                 <button
                   type="button"
                   onClick={() => setIsAddVoterModalOpen(false)}
                   disabled={isCreatingVoter}
-                  className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                  className="px-4 py-2.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingVoter}
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+                  className="px-5 py-2.5 text-xs font-extrabold text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 rounded-xl shadow-glow transition-all flex items-center space-x-2 cursor-pointer"
                 >
                   {isCreatingVoter ? (
                     <span>Registering...</span>
