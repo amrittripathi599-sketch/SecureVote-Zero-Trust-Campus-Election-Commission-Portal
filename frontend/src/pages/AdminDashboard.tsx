@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Search,
   Trophy,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
@@ -48,6 +49,11 @@ export const AdminDashboard: React.FC = () => {
   // Declare Result modal state
   const [electionToDeclare, setElectionToDeclare] = useState<Election | null>(null);
   const [isDeclaring, setIsDeclaring] = useState<boolean>(false);
+
+  // Resume Election modal state
+  const [electionToResume, setElectionToResume] = useState<Election | null>(null);
+  const [isResuming, setIsResuming] = useState<boolean>(false);
+  const [resumeNewEndTime, setResumeNewEndTime] = useState<string>('');
 
   // Candidate Nomination form state
   const [selectedElectionId, setSelectedElectionId] = useState<number | ''>('');
@@ -145,6 +151,35 @@ export const AdminDashboard: React.FC = () => {
       setElectionToDeclare(null);
     } finally {
       setIsDeclaring(false);
+    }
+  };
+
+  const handleResumeElection = async () => {
+    if (!electionToResume) return;
+    setIsResuming(true);
+    setError(null);
+    try {
+      const payload: any = {};
+      if (resumeNewEndTime) {
+        payload.new_end_time = new Date(resumeNewEndTime).toISOString();
+      }
+      const res = await apiClient.post<Election>(
+        `/api/admin/elections/${electionToResume.election_id}/resume`,
+        payload
+      );
+      setSuccessMessage(
+        `Election "${res.data.title}" resumed successfully! Premature declaration revoked and voting reopened.`
+      );
+      setElectionToResume(null);
+      setResumeNewEndTime('');
+      // Reload elections
+      const elRes = await apiClient.get<Election[]>('/api/elections');
+      setElections(elRes.data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to resume election.');
+      setElectionToResume(null);
+    } finally {
+      setIsResuming(false);
     }
   };
 
@@ -365,14 +400,34 @@ export const AdminDashboard: React.FC = () => {
                     </button>
 
                     {elec.declared_at || elec.is_declared ? (
-                      <button
-                        disabled
-                        className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
-                        title="Result declared"
-                      >
-                        <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Result declared</span>
-                      </button>
+                      <>
+                        <button
+                          disabled
+                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                          title="Result declared"
+                        >
+                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Result declared</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setElectionToResume(elec);
+                            const end = new Date(elec.end_time);
+                            const now = new Date();
+                            if (end <= now) {
+                              const future = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                              setResumeNewEndTime(future.toISOString().slice(0, 16));
+                            } else {
+                              setResumeNewEndTime('');
+                            }
+                          }}
+                          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
+                          title="Resume election if accidentally declared"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Resume</span>
+                        </button>
+                      </>
                     ) : (
                       <button
                         onClick={() => setElectionToDeclare(elec)}
@@ -813,6 +868,73 @@ export const AdminDashboard: React.FC = () => {
                   <>
                     <Trophy className="w-4 h-4" />
                     <span>Confirm & Declare</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resume Election Confirmation Modal */}
+      {electionToResume && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center space-x-3 text-indigo-600">
+              <div className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
+                <RotateCcw className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Resume Election</h3>
+                <p className="text-xs text-slate-500">Revoke accidental result declaration</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Resuming this election will revoke the declared result, restore the status to <strong className="text-slate-800">Open</strong>, and allow eligible students to continue casting ballots. All previously cast votes are strictly preserved.
+            </p>
+
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+              <div className="font-semibold text-slate-800">Target Election:</div>
+              <p className="font-bold text-slate-900">{electionToResume.title} (#{electionToResume.election_id})</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-700">
+                Voting Deadline (Optional Extension):
+              </label>
+              <input
+                type="datetime-local"
+                value={resumeNewEndTime}
+                onChange={(e) => setResumeNewEndTime(e.target.value)}
+                className="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-500">
+                Specify a new deadline if the previous deadline expired, or leave blank to automatically extend by 24 hours if needed.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setElectionToResume(null)}
+                disabled={isResuming}
+                className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleResumeElection}
+                disabled={isResuming}
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all flex items-center space-x-2"
+              >
+                {isResuming ? (
+                  <span>Resuming Election...</span>
+                ) : (
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Confirm & Resume</span>
                   </>
                 )}
               </button>

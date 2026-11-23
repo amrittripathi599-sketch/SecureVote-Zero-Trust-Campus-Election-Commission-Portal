@@ -50,6 +50,10 @@ class ElectionUpdateRequest(BaseModel):
     status: Optional[ElectionStatus] = None
 
 
+class ResumeElectionRequest(BaseModel):
+    new_end_time: Optional[datetime] = None
+
+
 class ElectionResponse(BaseModel):
     election_id: int
     title: str

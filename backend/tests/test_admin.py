@@ -192,3 +192,97 @@ def test_declare_result_lifecycle_and_security(client, admin_token, voter_token,
     assert items[0]["action"] == "declare_result"
     assert items[0]["status"] == "success"
     assert "Student One" in items[0]["details"]
+
+
+def test_resume_election_lifecycle_and_security(client, admin_token, voter_token, voter2_token):
+    """
+    Verifies the Resume Election feature:
+    1. Voter casts vote in open election.
+    2. Admin declares result (status becomes closed, declared_at set).
+    3. Voter attempts to resume election -> 403 Forbidden.
+    4. Admin resumes election -> status becomes 'open', declared_at/winner_candidate_id cleared.
+    5. Second voter casts vote in the resumed election -> 200 OK.
+    6. Double-voting is still prevented for the first voter -> 409 Conflict.
+    7. Resuming an already open and undeclared election returns 400 Bad Request.
+    8. Audit log records 'resume_election' action.
+    9. Admin can re-declare result -> tally reflects both voters.
+    """
+    # 1. Voter 1 casts vote
+    v1_res = client.post(
+        "/api/votes",
+        json={"election_id": 1, "candidate_id": 1},
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert v1_res.status_code == 200
+
+    # 2. Admin declares result
+    dec_res = client.post(
+        "/api/admin/elections/1/declare-result",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert dec_res.status_code == 200
+    assert dec_res.json()["status"] == "closed"
+
+    # 3. Voter tries to resume election -> 403 Forbidden
+    voter_resume = client.post(
+        "/api/admin/elections/1/resume",
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert voter_resume.status_code == 403
+
+    # 4. Admin resumes election -> 200 OK
+    admin_resume = client.post(
+        "/api/admin/elections/1/resume",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert admin_resume.status_code == 200
+    resumed_data = admin_resume.json()
+    assert resumed_data["status"] == "open"
+    assert resumed_data["declared_at"] is None
+    assert resumed_data["winner_candidate_id"] is None
+    assert resumed_data["is_declared"] is False
+
+    # 5. Voter 2 can now cast vote in the resumed election
+    v2_res = client.post(
+        "/api/votes",
+        json={"election_id": 1, "candidate_id": 2},
+        headers={"Authorization": f"Bearer {voter2_token}"}
+    )
+    assert v2_res.status_code == 200
+
+    # 6. Double voting check: Voter 1 cannot vote again in the resumed election
+    v1_repeat = client.post(
+        "/api/votes",
+        json={"election_id": 1, "candidate_id": 1},
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert v1_repeat.status_code == 409
+
+    # 7. Resuming already open and undeclared election returns 400 Bad Request
+    already_open_resume = client.post(
+        "/api/admin/elections/1/resume",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert already_open_resume.status_code == 400
+    assert "already open" in already_open_resume.json()["detail"].lower()
+
+    # 8. Check audit log has 'resume_election'
+    audit_res = client.get(
+        "/api/admin/audit-logs?action=resume_election",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert audit_res.status_code == 200
+    logs = audit_res.json()["items"]
+    assert len(logs) >= 1
+    assert logs[0]["action"] == "resume_election"
+    assert logs[0]["status"] == "success"
+
+    # 9. Admin can re-declare result after resumed voting period
+    re_declare = client.post(
+        "/api/admin/elections/1/declare-result",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert re_declare.status_code == 200
+    re_declared_data = re_declare.json()
+    assert re_declared_data["status"] == "closed"
+    assert re_declared_data["total_voted"] == 2

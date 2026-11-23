@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy import func, select
@@ -17,6 +17,7 @@ from app.schemas import (
     ElectionResponse,
     ElectionUpdateRequest,
     PaginatedAuditLogsResponse,
+    ResumeElectionRequest,
     TurnoutCandidateTally,
     UserResponse,
 )
@@ -99,6 +100,10 @@ def update_election(
     if payload.status is not None:
         changes.append(f"status: '{election.status.value}' -> '{payload.status.value}'")
         election.status = payload.status
+        if payload.status == ElectionStatus.open and election.declared_at is not None:
+            election.declared_at = None
+            election.winner_candidate_id = None
+            changes.append("revoked premature declaration")
 
     if election.end_time <= election.start_time:
         raise HTTPException(
@@ -262,6 +267,93 @@ def declare_election_result(
         total_voted=total_voted,
         turnout_percentage=turnout_pct
     )
+
+
+@router.post("/elections/{election_id}/resume", response_model=ElectionResponse)
+def resume_election(
+    election_id: int,
+    request: Request,
+    payload: Optional[ResumeElectionRequest] = None,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Resumes an election if the result was accidentally declared or prematurely closed.
+    - Requires role 'admin' (403 Forbidden for non-admins).
+    - Validates that the election exists (404 Not Found).
+    - If already open and not declared, returns 400 Bad Request.
+    - Revokes declaration: sets declared_at = None, winner_candidate_id = None.
+    - Sets election.status = ElectionStatus.open.
+    - End time handling:
+      - If payload and payload.new_end_time: validates new_end_time > now and new_end_time > start_time,
+        then updates election.end_time.
+      - If no new_end_time provided and election.end_time <= now: automatically extends end_time by 24 hours
+        so voters can cast ballots without being blocked by an expired deadline.
+    - Preserves all previously cast votes in votes_ledger and participation records.
+    - Writes an immutable audit log entry with action="resume_election".
+    - Returns updated ElectionResponse.
+    """
+    election = db.execute(
+        select(Election).where(Election.election_id == election_id)
+    ).scalar_one_or_none()
+
+    if not election:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Election ID {election_id} not found."
+        )
+
+    if election.status == ElectionStatus.open and election.declared_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Election is already open and not declared."
+        )
+
+    now = datetime.utcnow()
+
+    # End time adjustment if provided or if expired
+    if payload and payload.new_end_time is not None:
+        if payload.new_end_time <= now or payload.new_end_time <= election.start_time:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New end time must be in the future and chronologically after start time."
+            )
+        election.end_time = payload.new_end_time
+    elif election.end_time <= now:
+        # Extend by 24 hours so voters can vote without being blocked by expired end_time
+        election.end_time = now + timedelta(hours=24)
+
+    was_declared = election.declared_at is not None
+    election.status = ElectionStatus.open
+    election.declared_at = None
+    election.winner_candidate_id = None
+
+    # Write immutable audit log
+    audit_entry = AuditLog(
+        user_id=admin_user.user_id,
+        action="resume_election",
+        status="success",
+        timestamp=now,
+        ip_address=get_client_ip(request),
+        details=(
+            f"Election '{election.title}' (ID {election_id}) resumed by admin. "
+            f"Premature result declaration revoked: {was_declared}. "
+            f"Status set to open. Voting active until {election.end_time.isoformat()}."
+        )
+    )
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(election)
+
+    cand_count = db.execute(
+        select(func.count(Candidate.candidate_id)).where(Candidate.election_id == election_id)
+    ).scalar() or 0
+
+    res = ElectionResponse.model_validate(election)
+    res.candidate_count = cand_count
+    res.is_declared = False
+    res.winner_name = None
+    return res
 
 
 @router.post("/candidates", response_model=CandidateResponse)

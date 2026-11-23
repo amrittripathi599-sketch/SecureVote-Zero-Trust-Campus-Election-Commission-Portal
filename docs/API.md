@@ -394,6 +394,41 @@ Finalizes the election, closes voting permanently in an atomic database transact
 
 ---
 
+### 5.8 Resume Election
+Reopens voting and revokes a premature or accidental result declaration. Clears `declared_at` and `winner_candidate_id`, sets status back to `open`, and optionally extends the voting deadline (or extends by 24h if expired). All previously cast ballots in `votes_ledger` and participation records remain strictly preserved. Writes an immutable audit event (`resume_election`).
+
+- **Method**: `POST`
+- **Route**: `/api/admin/elections/{election_id}/resume`
+- **Auth**: Bearer Token (`role: "admin"` only)
+- **Request Body** (Optional):
+  ```json
+  {
+    "new_end_time": "2026-12-06T18:00:00Z"
+  }
+  ```
+- **Responses**:
+  - `200 OK`:
+  ```json
+  {
+    "election_id": 1,
+    "title": "Student Council 2026",
+    "start_time": "2026-12-01T09:00:00Z",
+    "end_time": "2026-12-06T18:00:00Z",
+    "status": "open",
+    "created_by": 1,
+    "candidate_count": 3,
+    "declared_at": null,
+    "winner_candidate_id": null,
+    "is_declared": false,
+    "winner_name": null
+  }
+  ```
+  - `400 Bad Request`: If the election is already open and not declared, or if `new_end_time` is in the past.
+  - `403 Forbidden`: If caller does not possess the `admin` role.
+  - `404 Not Found`: If `election_id` does not exist.
+
+---
+
 ## 6. Analytics Endpoints
 
 ### 6.1 Get Turnout & Aggregate Candidate Tallies

@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Percent,
   Trophy,
+  RotateCcw,
 } from 'lucide-react';
 import {
   BarChart,
@@ -34,6 +35,7 @@ export const Results: React.FC = () => {
   const { electionId } = useParams<{ electionId: string }>();
   const [analytics, setAnalytics] = useState<TurnoutAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isResuming, setIsResuming] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,6 +54,28 @@ export const Results: React.FC = () => {
       setError(err.response?.data?.detail || 'Failed to calculate turnout and candidate tallies.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResumeElection = async () => {
+    if (
+      !window.confirm(
+        'Declaring the result was accidental? Resuming this election will revoke the declared result, set the status to Open, and allow voters to continue voting. Existing votes are preserved. Continue?'
+      )
+    ) {
+      return;
+    }
+    setIsResuming(true);
+    setError(null);
+    try {
+      await apiClient.post(`/api/admin/elections/${electionId}/resume`);
+      if (electionId) {
+        await loadResults(Number(electionId));
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to resume election.');
+    } finally {
+      setIsResuming(false);
     }
   };
 
@@ -120,8 +144,19 @@ export const Results: React.FC = () => {
                 <Trophy className="w-4 h-4 text-yellow-200" />
                 <span>Certified Official Winner</span>
               </div>
-              <div className="text-xs text-yellow-100 font-medium">
-                Declared: {new Date(analytics.declared_at!).toLocaleString()}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="text-xs text-yellow-100 font-medium">
+                  Declared: {new Date(analytics.declared_at!).toLocaleString()}
+                </div>
+                <button
+                  onClick={handleResumeElection}
+                  disabled={isResuming}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                  title="Revoke declaration and reopen voting"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{isResuming ? 'Resuming...' : 'Accidental? Resume Election'}</span>
+                </button>
               </div>
             </div>
 
