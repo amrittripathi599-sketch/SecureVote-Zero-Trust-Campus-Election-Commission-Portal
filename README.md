@@ -1,11 +1,26 @@
 # SecureVote — Zero-Trust Campus Election & Audit Portal
 
-[![Backend Tests](https://img.shields.io/badge/pytest-24%20passed-emerald)](https://docs.pytest.org)
-[![Frontend Build](https://img.shields.io/badge/vite-v5.4.21-teal)](https://vitejs.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue)](https://www.typescriptlang.org)
-[![Security Standard](https://img.shields.io/badge/Zero--Trust-3NF%20Secrecy-purple)](./docs/ARCHITECTURE.md)
+[![Live Frontend](https://img.shields.io/badge/Vercel-Live%20Portal-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+[![Live Backend API](https://img.shields.io/badge/Render-FastAPI%20Backend-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://securevote-backend-srd5.onrender.com/docs)
+[![Azure Database](https://img.shields.io/badge/Azure-PostgreSQL%2015%20(ACI)-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://portal.azure.com)
+[![CI/CD Tests](https://img.shields.io/badge/pytest-24%2F24%20Passing-10b981?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/amrittripathi599-sketch/SecureVote-Zero-Trust-Campus-Election-Commission-Postal/actions)
 
-SecureVote is a production-quality, zero-trust campus election and audit portal engineered for university student governments, faculty councils, and institutional balloting. Built with **FastAPI**, **SQLAlchemy 2.0 ORM**, **React 18**, **TypeScript**, and **Tailwind CSS**, SecureVote enforces mathematical ballot secrecy in Third Normal Form (3NF) and protects electoral integrity using kernel-level append-only database triggers.
+SecureVote is an enterprise-grade, zero-trust campus election commission and cryptographic audit portal engineered for university student governments, faculty councils, and institutional balloting. Built with **FastAPI**, **SQLAlchemy 2.0 ORM**, **React 18**, **TypeScript**, and **Tailwind CSS**, SecureVote enforces mathematical ballot secrecy in Third Normal Form (3NF) and guarantees electoral integrity using kernel-level append-only PostgreSQL triggers.
+
+---
+
+## 🌐 Live Cloud Deployment
+
+The entire SecureVote platform is deployed and publicly accessible in production:
+
+| Component | Platform / Host | Endpoint / URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend Portal** | **Vercel Production** | [SecureVote Live Portal](https://vercel.com) | 🟢 Live & Auto-Deploying |
+| **Backend REST API** | **Render Web Service** | [`https://securevote-backend-srd5.onrender.com`](https://securevote-backend-srd5.onrender.com) | 🟢 Live (Port 10000) |
+| **API Health Probe** | **Render Web Service** | [`/api/health`](https://securevote-backend-srd5.onrender.com/api/health) | 🟢 `{"status":"healthy"}` |
+| **Swagger Interactive Docs**| **Render Web Service** | [`/docs`](https://securevote-backend-srd5.onrender.com/docs) | 🟢 Interactive OpenAPI Spec |
+| **Relational Database** | **Azure Container Instances** | `securevote-db-amrit.c7b6ecd3crb0c6fq.southeastasia.azurecontainer.io:5432` | 🟢 PostgreSQL 15 Running |
+| **Automated CI/CD** | **GitHub Actions** | [Workflow Runs](https://github.com/amrittripathi599-sketch/SecureVote-Zero-Trust-Campus-Election-Commission-Postal/actions) | 🟢 24/24 Tests Passing |
 
 ---
 
