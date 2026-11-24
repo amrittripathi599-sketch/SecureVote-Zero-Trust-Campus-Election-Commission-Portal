@@ -81,6 +81,50 @@ startxref
     return pdf_text.encode("latin-1")
 
 
+SAMPLE_MANIFESTOS = [
+    {
+        "name": "Aarav Sharma",
+        "position": "Council President",
+        "slogan": "Progress through Transparency and Student Empowerment",
+        "vision": "Championing student rights, open budget governance, and 24/7 lab facilities.",
+        "filename": "manifesto_aarav_sharma.pdf",
+    },
+    {
+        "name": "Bhavna Patel",
+        "position": "Vice President",
+        "slogan": "Innovation, Inclusivity, and Modern Campus Life",
+        "vision": "Driving research innovation, women in STEM hackathons, and wellness programs.",
+        "filename": "manifesto_bhavna_patel.pdf",
+    },
+    {
+        "name": "Chirag Verma",
+        "position": "General Secretary",
+        "slogan": "Efficient Operations and Dynamic Student Activities",
+        "vision": "Promoting inter-college sports, streamlined club funding, and sustainability.",
+        "filename": "manifesto_chirag_verma.pdf",
+    },
+]
+
+
+def ensure_sample_manifestos(upload_dir: Path = None):
+    """
+    Ensures sample candidate manifesto PDF files exist in the uploads directory.
+    Safe to run repeatedly; only creates files if they are missing.
+    Ensures candidate PDF downloads work on ephemeral hosting platforms like Render.
+    """
+    if upload_dir is None:
+        upload_dir = Path(settings.UPLOAD_DIR).resolve()
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    for item in SAMPLE_MANIFESTOS:
+        file_path = upload_dir / item["filename"]
+        if not file_path.exists():
+            pdf_bytes = generate_sample_pdf(item["name"], item["position"], item["vision"])
+            with open(file_path, "wb") as f:
+                f.write(pdf_bytes)
+            print(f"Generated missing sample manifesto: {file_path.name}")
+
+
 def sync_admin_name(db: Session = None):
     """
     Zero-Loss Update Step:
@@ -107,8 +151,12 @@ def seed_database(db: Session = None):
     """
     Populates database with initial demonstration accounts, demo election,
     and nominated candidates if the database is currently empty.
-    Also synchronizes existing admin account name to 'Mr. Amrit Tripathi'.
+    Also synchronizes existing admin account name to 'Mr. Amrit Tripathi'
+    and guarantees sample manifesto PDFs exist on disk.
     """
+    # Always ensure sample manifesto PDFs exist on disk for candidate downloads
+    ensure_sample_manifestos()
+
     close_db = False
     if db is None:
         app_db.init_db()
@@ -171,47 +219,16 @@ def seed_database(db: Session = None):
         db.add(demo_election)
         db.flush()
 
-        # 4. Prepare local uploads directory for manifesto PDFs
-        upload_dir = Path(settings.UPLOAD_DIR)
-        upload_dir.mkdir(parents=True, exist_ok=True)
-
-        candidates_meta = [
-            (
-                voter_records[0],
-                "Council President",
-                "Progress through Transparency and Student Empowerment",
-                "Championing student rights, open budget governance, and 24/7 lab facilities.",
-                "manifesto_aarav_sharma.pdf"
-            ),
-            (
-                voter_records[1],
-                "Vice President",
-                "Innovation, Inclusivity, and Modern Campus Life",
-                "Driving research innovation, women in STEM hackathons, and wellness programs.",
-                "manifesto_bhavna_patel.pdf"
-            ),
-            (
-                voter_records[2],
-                "General Secretary",
-                "Efficient Operations and Dynamic Student Activities",
-                "Promoting inter-college sports, streamlined club funding, and sustainability.",
-                "manifesto_chirag_verma.pdf"
-            ),
-        ]
-
-        for voter, position, slogan, vision, filename in candidates_meta:
-            pdf_bytes = generate_sample_pdf(voter.full_name, position, vision)
-            file_path = upload_dir / filename
-            with open(file_path, "wb") as f:
-                f.write(pdf_bytes)
-
-            manifesto_url = f"/uploads/{filename}"
+        # 4. Nominate candidates linked to sample manifestos
+        for i, item in enumerate(SAMPLE_MANIFESTOS):
+            voter = voter_records[i]
+            manifesto_url = f"/uploads/{item['filename']}"
 
             candidate = Candidate(
                 election_id=demo_election.election_id,
                 user_id=voter.user_id,
-                position=position,
-                slogan=slogan,
+                position=item["position"],
+                slogan=item["slogan"],
                 manifesto_url=manifesto_url
             )
             db.add(candidate)

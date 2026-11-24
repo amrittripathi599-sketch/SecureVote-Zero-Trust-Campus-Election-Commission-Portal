@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import init_db
 from app.routers import admin, analytics, auth, candidates, elections, votes
-from app.seed import seed_database
+from app.seed import ensure_sample_manifestos, seed_database
 
 # Setup structured logging
 logging.basicConfig(
@@ -24,9 +24,10 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing SecureVote database and registering immutability triggers...")
     init_db()
 
-    # Ensure uploads folder exists
-    upload_path = Path(settings.UPLOAD_DIR)
+    # Ensure uploads folder exists and sample manifestos are present on disk
+    upload_path = Path(settings.UPLOAD_DIR).resolve()
     upload_path.mkdir(parents=True, exist_ok=True)
+    ensure_sample_manifestos(upload_path)
 
     # Seed demo data if database is fresh
     seed_database()
@@ -83,6 +84,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 uploads_dir = Path(settings.UPLOAD_DIR).resolve()
 uploads_dir.mkdir(parents=True, exist_ok=True)
+ensure_sample_manifestos(uploads_dir)
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # ---------------------------------------------------------------------------

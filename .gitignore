@@ -42,8 +42,13 @@ htmlcov/
 *.sqlite3
 
 # Uploaded Files
-uploads/
-backend/uploads/
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/manifesto_aarav_sharma.pdf
+!backend/uploads/manifesto_bhavna_patel.pdf
+!backend/uploads/manifesto_chirag_verma.pdf
+!backend/uploads/.gitkeep
 
 # Environment Variables
 .env
@@ -68,5 +73,8 @@ dist-ssr/
 Thumbs.db
 
 # Evaluation & Local Study Documents
-*.pdf
 SecureVote_Practical_Evaluation_and_Viva_Defense_Manual.pdf
+*.pdf
+!backend/uploads/manifesto_aarav_sharma.pdf
+!backend/uploads/manifesto_bhavna_patel.pdf
+!backend/uploads/manifesto_chirag_verma.pdf
