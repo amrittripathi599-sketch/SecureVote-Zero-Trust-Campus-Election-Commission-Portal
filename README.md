@@ -283,6 +283,16 @@ SecureVote/
 
 ---
 
+## 💡 Acknowledgements & Tools Used
+
+Special credit and appreciation to the AI platforms and tools utilized during the research, design, and development of SecureVote:
+
+- **Google Gemini**: Utilized during the initial ideation phase for project idea generation, problem formulation, and defining the high-level system overview.
+- **Claude**: Utilized for explaining Azure infrastructure setup steps, drafting comprehensive deployment instructions and project manuals, and assisting with Git workflow troubleshooting.
+- **Antigravity IDE**: Utilized as the primary agentic development environment for full-stack codebase implementation, automated testing (26/26 unit and integration test suite), multi-platform runtime debugging (FastAPI, React 18, Vite), and live cloud deployment orchestration across Azure, Render, and Vercel.
+
+---
+
 ## 📄 License
 
 This project was developed for academic evaluation and institutional demonstration purposes.
