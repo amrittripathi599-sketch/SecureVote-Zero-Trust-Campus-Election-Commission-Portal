@@ -98,10 +98,10 @@ export const Navbar: React.FC = () => {
                 )}
               </nav>
 
-              {/* Status / Azure DB indicator */}
+              {/* Status indicator */}
               <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900/60 border border-emerald-500/20 text-[11px] font-mono text-emerald-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Azure Postgres 15 Online</span>
+                <span>Commission Network Active</span>
               </div>
 
               {/* User Executive Pill */}

@@ -81,7 +81,7 @@ export const VoterDashboard: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-mono text-slate-400">
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-white/5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Ledger: PostgreSQL 15</span>
+              <span>Ledger: Immutable &amp; Encrypted</span>
             </span>
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-white/5">
               <Lock className="w-3.5 h-3.5 text-blue-400" />

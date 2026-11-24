@@ -19,6 +19,9 @@ import {
   Trophy,
   RotateCcw,
   UserPlus,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
@@ -80,6 +83,23 @@ export const AdminDashboard: React.FC = () => {
 
   // User list search
   const [userSearch, setUserSearch] = useState<string>('');
+
+  // Reset Admin Master Password state
+  const [isResetAdminModalOpen, setIsResetAdminModalOpen] = useState<boolean>(false);
+  const [adminOldPassword, setAdminOldPassword] = useState<string>('');
+  const [adminNewPassword, setAdminNewPassword] = useState<string>('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState<string>('');
+  const [showAdminOldPass, setShowAdminOldPass] = useState<boolean>(false);
+  const [showAdminNewPass, setShowAdminNewPass] = useState<boolean>(false);
+  const [isResettingAdminPassword, setIsResettingAdminPassword] = useState<boolean>(false);
+  const [adminResetError, setAdminResetError] = useState<string | null>(null);
+
+  // Reset User Password modal state (Admin resetting a voter's password)
+  const [isResetUserModalOpen, setIsResetUserModalOpen] = useState<boolean>(false);
+  const [userToReset, setUserToReset] = useState<UserType | null>(null);
+  const [userNewPassword, setUserNewPassword] = useState<string>('Voter@123');
+  const [isResettingUserPassword, setIsResettingUserPassword] = useState<boolean>(false);
+  const [userResetError, setUserResetError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAllAdminData();
@@ -343,6 +363,76 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleResetAdminPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminResetError(null);
+
+    if (!adminOldPassword || !adminNewPassword) {
+      setAdminResetError('Please provide both your current and new password.');
+      return;
+    }
+
+    if (adminNewPassword.length < 6) {
+      setAdminResetError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    if (adminNewPassword !== adminConfirmPassword) {
+      setAdminResetError('New password and confirmation do not match.');
+      return;
+    }
+
+    if (adminOldPassword === adminNewPassword) {
+      setAdminResetError('New password must be different from current password.');
+      return;
+    }
+
+    setIsResettingAdminPassword(true);
+    try {
+      const res = await apiClient.post<{ message: string; roll_number: string }>('/api/admin/reset-my-password', {
+        current_password: adminOldPassword,
+        new_password: adminNewPassword,
+      });
+
+      setSuccessMessage(res.data.message || 'Administrator master password successfully updated.');
+      setIsResetAdminModalOpen(false);
+      setAdminOldPassword('');
+      setAdminNewPassword('');
+      setAdminConfirmPassword('');
+    } catch (err: any) {
+      setAdminResetError(err.response?.data?.detail || 'Failed to update administrator password.');
+    } finally {
+      setIsResettingAdminPassword(false);
+    }
+  };
+
+  const handleResetUserPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userToReset) return;
+    setUserResetError(null);
+
+    if (!userNewPassword || userNewPassword.length < 6) {
+      setUserResetError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    setIsResettingUserPassword(true);
+    try {
+      const res = await apiClient.post<{ message: string; roll_number: string }>(
+        `/api/admin/users/${userToReset.user_id}/reset-password`,
+        { new_password: userNewPassword }
+      );
+
+      setSuccessMessage(res.data.message || `Password for ${userToReset.roll_number} has been reset.`);
+      setIsResetUserModalOpen(false);
+      setUserToReset(null);
+    } catch (err: any) {
+      setUserResetError(err.response?.data?.detail || 'Failed to reset user password.');
+    } finally {
+      setIsResettingUserPassword(false);
+    }
+  };
+
   const voterUsers = users.filter((u) => u.role === 'voter');
   const filteredUsers = users.filter(
     (u) =>
@@ -371,18 +461,39 @@ export const AdminDashboard: React.FC = () => {
               Campus Election Commission Tribunal
             </h1>
           </div>
-          <p className="text-xs text-slate-400">
-            Chief Officer: <strong className="text-amber-300 font-mono">{user?.full_name || 'Mr. Amrit Tripathi'}</strong> &bull; Zero-trust administrative control, candidate certification &amp; append-only audit monitoring.
-          </p>
+          <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2">
+            <span>Chief Officer: <strong className="text-amber-300 font-mono">{user?.full_name || 'Mr. Amrit Tripathi'}</strong></span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+              ID: {user?.roll_number || 'ADMIN001'}
+            </span>
+            <span>&bull; Zero-trust administrative control &amp; immutable audit monitoring.</span>
+          </div>
         </div>
 
-        <Link
-          to="/admin/elections/new"
-          className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl font-extrabold text-xs text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 shadow-glow transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Schedule Election</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setAdminOldPassword('');
+              setAdminNewPassword('');
+              setAdminConfirmPassword('');
+              setAdminResetError(null);
+              setIsResetAdminModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl font-bold text-xs text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400 transition-all cursor-pointer shadow-sm"
+          >
+            <KeyRound className="w-4 h-4 text-purple-400" />
+            <span>Reset Admin Password</span>
+          </button>
+
+          <Link
+            to="/admin/elections/new"
+            className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl font-extrabold text-xs text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 shadow-glow transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Schedule Election</span>
+          </Link>
+        </div>
       </div>
 
       <ErrorBanner message={error} onDismiss={() => setError(null)} />
@@ -892,6 +1003,7 @@ export const AdminDashboard: React.FC = () => {
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">Participation Flag</th>
                   <th className="py-3 px-4">Registered Date</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 font-mono text-slate-300">
@@ -926,6 +1038,22 @@ export const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-slate-400">
                       {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserToReset(u);
+                          setUserNewPassword('Voter@123');
+                          setUserResetError(null);
+                          setIsResetUserModalOpen(true);
+                        }}
+                        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-purple-300 hover:text-white bg-purple-500/10 hover:bg-purple-600/30 border border-purple-500/25 transition-all cursor-pointer"
+                        title={`Reset password for ${u.roll_number}`}
+                      >
+                        <KeyRound className="w-3 h-3 text-purple-400" />
+                        <span>Reset Key</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -1182,6 +1310,200 @@ export const AdminDashboard: React.FC = () => {
                     <>
                       <UserPlus className="w-4 h-4" />
                       <span>{voterModalMode === 'single' ? 'Register Voter' : 'Batch Register'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Admin Master Password Modal */}
+      {isResetAdminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel-elevated rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-purple-500/30 space-y-5">
+            <div className="flex items-center space-x-3 text-purple-400">
+              <div className="p-2.5 bg-purple-500/15 border border-purple-500/30 rounded-xl">
+                <KeyRound className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-bold text-white">Reset Administrator Password</h3>
+                <p className="text-xs text-slate-400 font-mono">Account ID: {user?.roll_number || 'ADMIN001'}</p>
+              </div>
+            </div>
+
+            {adminResetError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs text-left">
+                {adminResetError}
+              </div>
+            )}
+
+            <form onSubmit={handleResetAdminPassword} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Current Master Password <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminOldPass ? 'text' : 'password'}
+                    required
+                    value={adminOldPassword}
+                    onChange={(e) => setAdminOldPassword(e.target.value)}
+                    placeholder="Enter current master password"
+                    className="glass-input w-full text-xs px-3.5 py-2.5 pr-10 rounded-xl focus:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminOldPass(!showAdminOldPass)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 cursor-pointer"
+                  >
+                    {showAdminOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  New Master Password <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminNewPass ? 'text' : 'password'}
+                    required
+                    value={adminNewPassword}
+                    onChange={(e) => setAdminNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    className="glass-input w-full text-xs px-3.5 py-2.5 pr-10 rounded-xl focus:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminNewPass(!showAdminNewPass)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 cursor-pointer"
+                  >
+                    {showAdminNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Confirm New Master Password <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={adminConfirmPassword}
+                  onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="glass-input w-full text-xs px-3.5 py-2.5 rounded-xl focus:text-white"
+                />
+                {adminNewPassword && adminConfirmPassword && (
+                  <div className="mt-1 text-[11px] font-mono">
+                    {adminNewPassword === adminConfirmPassword ? (
+                      <span className="text-emerald-400 flex items-center space-x-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Passwords match</span>
+                      </span>
+                    ) : (
+                      <span className="text-rose-400 flex items-center space-x-1">
+                        <XCircle className="w-3 h-3" />
+                        <span>Passwords do not match</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsResetAdminModalOpen(false)}
+                  disabled={isResettingAdminPassword}
+                  className="px-4 py-2.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResettingAdminPassword}
+                  className="px-5 py-2.5 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isResettingAdminPassword ? (
+                    <span>Updating Hash...</span>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>Update Master Password</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset User Password Modal (Admin resetting voter) */}
+      {isResetUserModalOpen && userToReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel-elevated rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-white/15 space-y-5">
+            <div className="flex items-center space-x-3 text-purple-400">
+              <div className="p-2.5 bg-purple-500/15 border border-purple-500/30 rounded-xl">
+                <KeyRound className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-bold text-white">Reset User Password</h3>
+                <p className="text-xs text-slate-400 font-mono">
+                  {userToReset.full_name} &bull; {userToReset.roll_number}
+                </p>
+              </div>
+            </div>
+
+            {userResetError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs text-left">
+                {userResetError}
+              </div>
+            )}
+
+            <form onSubmit={handleResetUserPassword} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  New Password for {userToReset.roll_number} <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={userNewPassword}
+                  onChange={(e) => setUserNewPassword(e.target.value)}
+                  placeholder="e.g. Voter@123"
+                  className="glass-input w-full text-xs font-mono px-3.5 py-2.5 rounded-xl focus:text-white"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  The new password will be hashed using bcrypt before storage.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsResetUserModalOpen(false)}
+                  disabled={isResettingUserPassword}
+                  className="px-4 py-2.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResettingUserPassword}
+                  className="px-5 py-2.5 text-xs font-extrabold text-navy-950 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 rounded-xl shadow-glow transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isResettingUserPassword ? (
+                    <span>Resetting...</span>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>Set New Password</span>
                     </>
                   )}
                 </button>

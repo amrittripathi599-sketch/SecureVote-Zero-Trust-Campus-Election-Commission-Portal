@@ -366,3 +366,77 @@ def test_admin_batch_create_voters(client, admin_token):
     assert data["created_count"] == 2
     assert data["skipped_count"] == 1
     assert "STU081" in data["skipped_roll_numbers"]
+
+
+def test_admin_reset_own_password(client, admin_token):
+    """Verifies that an administrator can securely reset their own master password."""
+    # 1. Invalid current password -> 401
+    bad_res = client.post(
+        "/api/admin/reset-my-password",
+        json={"current_password": "WrongPassword!123", "new_password": "NewAdminPassword@456"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert bad_res.status_code == 401
+    assert "verification failed" in bad_res.json()["detail"].lower()
+
+    # 2. Identical new password -> 400
+    same_res = client.post(
+        "/api/admin/reset-my-password",
+        json={"current_password": "Admin@123", "new_password": "Admin@123"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert same_res.status_code == 400
+
+    # 3. Successful password reset
+    good_res = client.post(
+        "/api/admin/reset-my-password",
+        json={"current_password": "Admin@123", "new_password": "NewAdminPassword@456"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert good_res.status_code == 200
+    assert "successfully updated" in good_res.json()["message"].lower()
+
+    # 4. Verify login with the new password
+    login_res = client.post(
+        "/api/auth/login",
+        json={"roll_number": "ADMIN001", "password": "NewAdminPassword@456"}
+    )
+    assert login_res.status_code == 200
+    assert "access_token" in login_res.json()
+
+    # 5. Restore original password for other tests
+    new_token = login_res.json()["access_token"]
+    restore_res = client.post(
+        "/api/admin/reset-my-password",
+        json={"current_password": "NewAdminPassword@456", "new_password": "Admin@123"},
+        headers={"Authorization": f"Bearer {new_token}"}
+    )
+    assert restore_res.status_code == 200
+
+
+def test_admin_reset_voter_password(client, admin_token, voter_token):
+    """Verifies that an administrator can reset any user's password, while voters are blocked."""
+    # 1. Non-admin voter blocked -> 403
+    forbidden_res = client.post(
+        "/api/admin/users/2/reset-password",
+        json={"new_password": "NewVoterPassword@789"},
+        headers={"Authorization": f"Bearer {voter_token}"}
+    )
+    assert forbidden_res.status_code == 403
+
+    # 2. Admin resets user password (user_id 2 = STU001)
+    reset_res = client.post(
+        "/api/admin/users/2/reset-password",
+        json={"new_password": "NewVoterPassword@789"},
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert reset_res.status_code == 200
+    assert "successfully reset" in reset_res.json()["message"].lower()
+
+    # 3. User can login with new password
+    user_login = client.post(
+        "/api/auth/login",
+        json={"roll_number": "STU001", "password": "NewVoterPassword@789"}
+    )
+    assert user_login.status_code == 200
+    assert "access_token" in user_login.json()

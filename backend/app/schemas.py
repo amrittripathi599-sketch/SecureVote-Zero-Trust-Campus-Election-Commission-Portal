@@ -198,3 +198,21 @@ class TurnoutAnalyticsResponse(BaseModel):
     winner_candidate_id: Optional[int] = None
     winner: Optional[DeclaredWinnerInfo] = None
     is_declared: bool = False
+
+
+# ---------------------------------------------------------
+# Password Reset Schemas
+# ---------------------------------------------------------
+class AdminPasswordResetRequest(BaseModel):
+    current_password: str = Field(..., description="Current administrator password for verification")
+    new_password: str = Field(..., min_length=6, max_length=128, description="New strong password")
+
+
+class UserPasswordResetRequest(BaseModel):
+    new_password: str = Field(..., min_length=6, max_length=128, description="New user password")
+
+
+class PasswordResetResponse(BaseModel):
+    message: str
+    roll_number: str
+    updated_at: datetime

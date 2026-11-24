@@ -23,8 +23,11 @@ from app.schemas import (
     TurnoutCandidateTally,
     UserResponse,
     VoterCreateRequest,
+    AdminPasswordResetRequest,
+    UserPasswordResetRequest,
+    PasswordResetResponse,
 )
-from app.security import hash_password
+from app.security import hash_password, verify_password
 from app.services.storage import get_storage_service
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Portal"])
@@ -663,4 +666,97 @@ def batch_create_voters(
         skipped_count=len(skipped_rolls),
         created_voters=created_voters,
         skipped_roll_numbers=skipped_rolls
+    )
+
+
+@router.post("/reset-my-password", response_model=PasswordResetResponse)
+def reset_my_password(
+    payload: AdminPasswordResetRequest,
+    request: Request,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Allows administrator to securely reset their own master password.
+    Requires constant-time verification of current_password before updating.
+    Logs an immutable audit trail entry.
+    """
+    if not verify_password(payload.current_password, admin_user.password_hash):
+        # Audit log failed password change attempt
+        audit_entry = AuditLog(
+            user_id=admin_user.user_id,
+            action="admin.password.reset_self",
+            status="failure",
+            timestamp=datetime.utcnow(),
+            ip_address=get_client_ip(request),
+            details=f"Failed self-service password reset attempt: Invalid current password for {admin_user.roll_number}"
+        )
+        db.add(audit_entry)
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password verification failed. Please enter your correct current password."
+        )
+
+    if payload.current_password == payload.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from your current password."
+        )
+
+    now = datetime.utcnow()
+    admin_user.password_hash = hash_password(payload.new_password)
+
+    audit_entry = AuditLog(
+        user_id=admin_user.user_id,
+        action="admin.password.reset_self",
+        status="success",
+        timestamp=now,
+        ip_address=get_client_ip(request),
+        details=f"Administrator '{admin_user.roll_number}' ({admin_user.full_name}) successfully reset their master password."
+    )
+    db.add(audit_entry)
+    db.commit()
+
+    return PasswordResetResponse(
+        message="Master password successfully updated.",
+        roll_number=admin_user.roll_number,
+        updated_at=now
+    )
+
+
+@router.post("/users/{user_id}/reset-password", response_model=PasswordResetResponse)
+def reset_user_password(
+    user_id: int,
+    payload: UserPasswordResetRequest,
+    request: Request,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin-only: Allows administrator to reset any student or institutional user's password.
+    Logs an immutable audit entry with the performing administrator's ID.
+    """
+    target_user = db.execute(select(User).where(User.user_id == user_id)).scalar_one_or_none()
+    if not target_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User ID {user_id} not found.")
+
+    now = datetime.utcnow()
+    target_user.password_hash = hash_password(payload.new_password)
+
+    audit_entry = AuditLog(
+        user_id=admin_user.user_id,
+        action="admin.password.reset_user",
+        status="success",
+        timestamp=now,
+        ip_address=get_client_ip(request),
+        details=f"Admin '{admin_user.roll_number}' reset password for user '{target_user.roll_number}' (ID: {target_user.user_id})."
+    )
+    db.add(audit_entry)
+    db.commit()
+
+    return PasswordResetResponse(
+        message=f"Password for {target_user.roll_number} ({target_user.full_name}) successfully reset.",
+        roll_number=target_user.roll_number,
+        updated_at=now
     )
