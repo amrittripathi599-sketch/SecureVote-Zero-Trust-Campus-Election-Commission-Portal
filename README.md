@@ -1,11 +1,11 @@
-# SecureVote — Zero-Trust Campus Election & Audit Portal
+# SecureVote — Campus Election & Electoral Audit Portal
 
-[![Live Frontend](https://img.shields.io/badge/Vercel-Live%20Portal-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
+[![Live Frontend](https://img.shields.io/badge/Vercel-Live%20Portal-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://securevote-frontend.vercel.app)
 [![Live Backend API](https://img.shields.io/badge/Render-FastAPI%20Backend-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://securevote-backend-srd5.onrender.com/docs)
 [![Azure Database](https://img.shields.io/badge/Azure-PostgreSQL%2015%20(ACI)-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://portal.azure.com)
-[![CI/CD Tests](https://img.shields.io/badge/pytest-24%2F24%20Passing-10b981?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/amrittripathi599-sketch/SecureVote-Zero-Trust-Campus-Election-Commission-Postal/actions)
+[![CI/CD Tests](https://img.shields.io/badge/pytest-26%2F26%20Passing-10b981?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/amrittripathi599-sketch/SecureVote-Zero-Trust-Campus-Election-Commission-Postal/actions)
 
-SecureVote is an enterprise-grade, zero-trust campus election commission and cryptographic audit portal engineered for university student governments, faculty councils, and institutional balloting. Built with **FastAPI**, **SQLAlchemy 2.0 ORM**, **React 18**, **TypeScript**, and **Tailwind CSS**, SecureVote enforces mathematical ballot secrecy in Third Normal Form (3NF) and guarantees electoral integrity using kernel-level append-only PostgreSQL triggers.
+SecureVote is a secure, privacy-first campus election and electoral audit portal engineered for university student governments, academic departments, and student council balloting. Built with **FastAPI**, **SQLAlchemy 2.0 ORM**, **React 18**, **TypeScript**, and **Tailwind CSS**, SecureVote delivers complete voter privacy by relationally decoupling voter identities from cast ballots while maintaining verifiable electoral integrity through database-enforced append-only audit records.
 
 ---
 
@@ -15,216 +15,274 @@ The entire SecureVote platform is deployed and publicly accessible in production
 
 | Component | Platform / Host | Endpoint / URL | Status |
 | :--- | :--- | :--- | :--- |
-| **Frontend Portal** | **Vercel Production** | [SecureVote Live Portal](https://vercel.com) | 🟢 Live & Auto-Deploying |
+| **Frontend Portal** | **Vercel** | [`https://securevote-frontend.vercel.app`](https://securevote-frontend.vercel.app) | 🟢 Live & Production-Ready |
 | **Backend REST API** | **Render Web Service** | [`https://securevote-backend-srd5.onrender.com`](https://securevote-backend-srd5.onrender.com) | 🟢 Live (Port 10000) |
 | **API Health Probe** | **Render Web Service** | [`/api/health`](https://securevote-backend-srd5.onrender.com/api/health) | 🟢 `{"status":"healthy"}` |
-| **Swagger Interactive Docs**| **Render Web Service** | [`/docs`](https://securevote-backend-srd5.onrender.com/docs) | 🟢 Interactive OpenAPI Spec |
+| **Swagger Interactive Docs** | **Render Web Service** | [`/docs`](https://securevote-backend-srd5.onrender.com/docs) | 🟢 Interactive OpenAPI Spec |
 | **Relational Database** | **Azure Container Instances** | `securevote-db-amrit.c7b6ecd3crb0c6fq.southeastasia.azurecontainer.io:5432` | 🟢 PostgreSQL 15 Running |
-| **Automated CI/CD** | **GitHub Actions** | [Workflow Runs](https://github.com/amrittripathi599-sketch/SecureVote-Zero-Trust-Campus-Election-Commission-Postal/actions) | 🟢 24/24 Tests Passing |
+| **Automated Test Suite** | **Local & CI/CD** | `pytest backend/tests` | 🟢 26/26 Tests Passing |
 
 ---
 
-## 🏛️ Architecture Overview
+## 🏛️ System Architecture
 
-SecureVote guarantees voter privacy by physically and relationally separating voter identity from cast ballots.
+SecureVote separates voter identity verification from ballot storage to ensure that no individual vote can ever be linked back to the student who cast it.
 
 ```mermaid
 flowchart TD
-    subgraph Client["Frontend (React 18 + Vite + TS)"]
-        UI_Voter["Voter Portal (Ballot Booth)"]
-        UI_Admin["Admin Console (Audit & Turnout)"]
+    subgraph Client["Frontend (React 18 + Vite + TypeScript)"]
+        UI_Voter["Voter Portal (Student Ballot & Confirmation)"]
+        UI_Admin["Admin Console (Turnout, Voters & Audit Log)"]
     end
 
-    subgraph API["FastAPI Application Layer"]
+    subgraph API["Backend API Layer (FastAPI)"]
         CORS["Strict CORS & Security Headers"]
-        Auth["Auth Service (JWT + Bcrypt)"]
-        RateLimit["Rate Limiter (5 attempts / 10 min)"]
-        VotingTx["Atomic cast_vote Transaction"]
-        Storage["Storage Service (Azure Blob / Local)"]
+        Auth["Authentication Service (JWT + Bcrypt)"]
+        RateLimit["Rate Limiter (5 attempts / 10 min window)"]
+        VotingTx["Atomic Voting Transaction Manager"]
+        ManifestoRoute["Resilient Manifesto Delivery Service"]
     end
 
-    subgraph DB["Relational Database (PostgreSQL / SQLite)"]
-        Users[("users\n(PK: user_id, roll_number, password_hash)")]
-        Participation[("election_participation\n(PK: user_id, election_id)")]
-        Elections[("elections\n(PK: election_id, timeline, status)")]
-        Candidates[("candidates\n(PK: candidate_id, manifesto_url)")]
-        VotesLedger[("votes_ledger (IMMUTABLE)\n(PK: vote_id, election_id, candidate_id)\n⛔ NO user_id column!")]
-        AuditLogs[("audit_logs (IMMUTABLE)\n(PK: log_id, action, status, ip)")]
+    subgraph DB["Relational Database (Azure PostgreSQL 15 / SQLite)"]
+        Users[("users\n(user_id, roll_number, password_hash, role)")]
+        Participation[("election_participation\n(user_id, election_id, voted_at)\n*Prevents Double-Voting*")]
+        Elections[("elections\n(election_id, title, timeline, status)")]
+        Candidates[("candidates\n(candidate_id, name, position, manifesto_url)")]
+        VotesLedger[("votes_ledger (APPEND-ONLY)\n(vote_id, election_id, candidate_id, timestamp)\n⛔ NO user_id column — 100% Anonymous")]
+        AuditLogs[("audit_logs (APPEND-ONLY)\n(log_id, action, status, ip_address, timestamp)")]
     end
 
-    UI_Voter -->|1. Submit Ballot| CORS
-    UI_Admin -->|Admin Operations| CORS
+    UI_Voter -->|1. Authenticate & Fetch Elections| CORS
+    UI_Admin -->|Admin Operations & Tallying| CORS
     CORS --> Auth
     Auth --> RateLimit
     RateLimit --> VotingTx
-    VotingTx -->|Lock Voter & Check| Users
-    VotingTx -->|Verify Participation| Participation
-    VotingTx -->|Anonymous Append| VotesLedger
-    VotingTx -->|Log Event| AuditLogs
-    Candidates -->|Manifesto Storage| Storage
+    VotingTx -->|1. Verify & Lock Eligibility| Users
+    VotingTx -->|2. Record Participation| Participation
+    VotingTx -->|3. Append Anonymous Ballot| VotesLedger
+    VotingTx -->|4. Record Audit Entry| AuditLogs
+    UI_Voter -->|Download Manifestos| ManifestoRoute
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, React Router v6, Axios, Recharts, Lucide Icons
-- **Backend**: Python 3.11+, FastAPI, SQLAlchemy 2.0 ORM, Pydantic v2, Uvicorn, PyJWT, Bcrypt
-- **Database**: PostgreSQL for production (via `DATABASE_URL`), SQLite for local development with zero setup
-- **Storage**: Azure Blob Storage SDK (`azure-storage-blob`) with transparent local filesystem fallback (`/uploads`)
-- **Testing**: Pytest with in-memory SQLite isolation, HTTPX TestClient
+- **Frontend**:
+  - React 18 with TypeScript and Vite
+  - Tailwind CSS for responsive styling
+  - Lucide React for consistent UI iconography
+  - Recharts for real-time election turnout visualization
+  - Axios with automated JWT authorization interceptors
+- **Backend**:
+  - Python 3.11+ / FastAPI
+  - SQLAlchemy 2.0 ORM with typed declarative models
+  - Pydantic v2 for request/response validation
+  - Uvicorn ASGI server
+  - PyJWT for token generation and validation
+  - Passlib with Bcrypt for salted password hashing
+- **Database**:
+  - **Production**: Azure Container Instances running PostgreSQL 15
+  - **Local Development**: SQLite with zero configuration required
+- **Cloud Infrastructure**:
+  - Frontend hosted on Vercel with automatic continuous deployment
+  - Backend hosted on Render Web Service
+  - Database provisioned on Microsoft Azure
 
 ---
 
-## 🔐 Zero-Trust Security Features
+## 🔐 Security & Privacy Features
 
-1. **3NF Ballot Secrecy**: The `votes_ledger` table contains **NO `user_id` column**. When a student votes, the system registers *that* they voted (in `election_participation`), but their candidate choice is committed to `votes_ledger` with zero voter linkage.
-2. **Immutable Append-Only Triggers**: Native database triggers (on both PostgreSQL and SQLite) abort any `UPDATE` or `DELETE` attempt on `votes_ledger` and `audit_logs`.
-3. **Atomic Voting Transaction**: Concurrency locking (`SELECT ... FOR UPDATE` on PostgreSQL / immediate transactions on SQLite) prevents double-voting and TOCTOU race conditions. If any exception occurs mid-transaction, all changes roll back completely.
-4. **Brute-Force Rate Limiting**: After 5 failed login attempts for a roll number within 10 minutes, the account is throttled with HTTP 429.
-5. **SQL Injection Immunity**: 100% of SQL operations execute via SQLAlchemy 2.0 ORM with parameter binding. No string formatting or raw concatenated SQL is permitted.
-6. **PDF Magic Byte Inspection**: Uploaded candidate manifestos are verified to start with `%PDF-` binary magic bytes and strictly limited to 5 MB.
-7. **Production Key Guard**: The backend refuses to boot in production if `JWT_SECRET` is left as default or shorter than 32 characters.
+1. **Ballot Privacy Guarantee**:
+   The `votes_ledger` table strictly contains **no `user_id` or voter reference**. When an eligible student votes, the system registers *that* they participated (in `election_participation`) to prevent duplicate voting, but their candidate choice is committed separately into `votes_ledger` with zero linkage to the voter.
+2. **Immutable Append-Only Records**:
+   Native database triggers abort any `UPDATE` or `DELETE` attempt on `votes_ledger` and `audit_logs`, preventing retrospective manipulation even by administrative users.
+3. **Atomic Voting Transactions**:
+   Voter eligibility checks, participation recording, and anonymous ballot logging are wrapped in a single database transaction (`SELECT ... FOR UPDATE` on PostgreSQL). If any step fails, the entire transaction rolls back cleanly.
+4. **Brute-Force Rate Limiting**:
+   Failed authentication attempts are tracked. After 5 consecutive failed logins for an institutional roll number within 10 minutes, the account is temporarily throttled with HTTP 429.
+5. **SQL Injection Prevention**:
+   100% of database interactions execute through SQLAlchemy 2.0 ORM with parameterized queries.
+6. **Input & File Validation**:
+   Candidate manifesto uploads are checked for PDF binary magic bytes (`%PDF-`) and restricted to safe file sizes (max 5 MB).
+7. **Security Headers**:
+   FastAPI middleware injects OWASP-recommended HTTP response headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`, `Referrer-Policy`).
 
 ---
 
-## 👥 Demo Accounts for Faculty Testing
+## 👥 Demo Accounts for Evaluation & Testing
 
-When starting the application with an empty database, the automated seed script (`app/seed.py`) provisions the following accounts:
+The automated seed script initializes the following accounts for evaluation:
 
-| Role | Roll Number | Password | Notes |
+| Role | Roll Number | Password | Name / Notes |
 | :--- | :--- | :--- | :--- |
-| **Election Commissioner** | `ADMIN001` | `Admin@123` | Mr. Amrit Tripathi (Full admin privileges: Create elections, declare/resume results, add voters, manage candidates, view audit logs, turnout charts) |
+| **Chief Election Officer (Admin)** | `ADMIN001` | `Admin@123` | **Mr. Amrit Tripathi** (Full administrative controls: create elections, add voters, manage candidates, view audit logs, turnout statistics, reset passwords) |
 | **Student Voter 1** | `STU001` | `Voter@123` | Aarav Sharma (Nominated for Council President) |
 | **Student Voter 2** | `STU002` | `Voter@123` | Bhavna Patel (Nominated for Vice President) |
 | **Student Voter 3** | `STU003` | `Voter@123` | Chirag Verma (Nominated for General Secretary) |
-| **Student Voter 4** | `STU004` | `Voter@123` | Divya Nair (Uncast ballot, ready to vote) |
-| **Student Voter 5** | `STU005` | `Voter@123` | Eshan Gupta (Uncast ballot, ready to vote) |
+| **Student Voter 4** | `STU004` | `Voter@123` | Divya Nair (Eligible student voter) |
+| **Student Voter 5** | `STU005` | `Voter@123` | Eshan Gupta (Eligible student voter) |
 
-*Demo Election*: **"Student Council 2026"** (Status: `open`, 3 candidates nominated with sample manifesto PDFs).
+*Active Demo Election*: **"Student Council Election 2026"** (Status: `open`, 3 candidates nominated with accessible manifesto documents).
 
 ---
 
-## 💻 Local Development (Zero-Config, SQLite)
+## 💻 Local Development Setup
 
-For local development and testing, **no Azure account or Azure environment variables are required**. The application defaults to SQLite and transparent local disk storage (`uploads/`).
+The project can be run locally using SQLite with no external cloud dependencies required.
 
-### 1. Backend Setup (Local)
+### 1. Backend Setup
 ```bash
-# 1. Navigate to backend directory
+# Navigate to the backend directory
 cd backend
 
-# 2. Activate Python virtual environment
-# Windows Powershell:
+# Create and activate Python virtual environment
+# Windows:
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 # Linux / macOS:
-# source .venv/bin/activate
+# python3 -m venv .venv && source .venv/bin/activate
 
-# 3. Install dependencies
+# Install required packages
 pip install -r requirements.txt
 
-# 4. Start development server (defaults to port 8000, reads PORT env var if set)
+# Start the local FastAPI server (runs on port 8000)
 uvicorn app.main:app --reload --port 8000
 ```
-- Interactive Swagger API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Health Probe: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+- API Documentation (Swagger): [http://localhost:8000/docs](http://localhost:8000/docs)
+- Health Check: [http://localhost:8000/api/health](http://localhost:8000/api/health)
 
-### 2. Frontend Setup (Local)
+### 2. Frontend Setup
 ```bash
-# Navigate to frontend (in a separate terminal)
+# In a separate terminal, navigate to frontend
 cd frontend
 
-# Install Node packages
+# Install dependencies
 npm install
 
-# Start Vite dev server (runs on http://localhost:5173)
+# Start Vite development server
 npm run dev
 ```
-Open your browser at **[http://localhost:5173](http://localhost:5173)** to access the portal.
+Open your browser at **[http://localhost:5173](http://localhost:5173)** to interact with the voting portal.
 
 ---
 
-## ☁️ Azure Production Deployment
+## 🧪 Automated Testing Suite
 
-In production, SecureVote runs as a zero-trust cloud solution across Azure services:
-- **Compute**: Azure App Service (Linux, Python 3.11 runtime, running Uvicorn on `$PORT`).
-- **Frontend**: Azure Static Web Apps (React 18 + Vite, client-side routing via `staticwebapp.config.json`).
-- **Database**: Azure Database for PostgreSQL Flexible Server (v15+, with `sslmode=require`).
-- **Secret Governance**: Azure Key Vault with Managed Identity (`DefaultAzureCredential`).
-- **File Storage**: Azure Blob Storage (private `manifestos` container).
+The repository includes comprehensive backend unit and integration tests covering the complete electoral lifecycle:
 
-> For detailed step-by-step CLI setup commands, firewall rules, and role assignments, see [docs/AZURE_DEPLOYMENT.md](./docs/AZURE_DEPLOYMENT.md).
-
-### Azure Production Environment Variables
-
-#### Backend (Azure App Service Configuration)
-| Variable | Production Value / Placeholder | Description |
-| :--- | :--- | :--- |
-| `ENVIRONMENT` | `production` | Enforces zero-trust checks (PostgreSQL and Azure Blob Storage required). |
-| `PORT` | `8000` | Port injected by Azure App Service container host. |
-| `KEY_VAULT_URL` | `https://<vault-name>.vault.azure.net/` | Optional: Loads `DATABASE_URL`, `JWT_SECRET`, and `AZURE_STORAGE_CONNECTION_STRING` via Managed Identity. |
-| `FRONTEND_ORIGIN` | `https://<app>.azurestaticapps.net` | Strict CORS allowed origin. |
-| `AZURE_CONTAINER_NAME`| `manifestos` | Private container for candidate manifesto PDFs. |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | JWT token lifespan. |
-| `LOGIN_RATE_LIMIT_ATTEMPTS` | `5` | Maximum failed logins before throttling. |
-| `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | `10` | Rate limiting rolling window. |
-
-#### Azure Key Vault Secrets (Managed Identity Protected)
-| Secret Name in Key Vault | Target Setting | Description |
-| :--- | :--- | :--- |
-| `DATABASE-URL` | `DATABASE_URL` | PostgreSQL connection string (`postgresql+psycopg2://<user>:<password>@<host>:5432/securevote?sslmode=require`). |
-| `JWT-SECRET` | `JWT_SECRET` | 32+ character cryptographic secret for signing voter tokens. |
-| `AZURE-STORAGE-CONNECTION-STRING` | `AZURE_STORAGE_CONNECTION_STRING` | Primary connection string for Azure Blob Storage. |
-
-#### Frontend (Azure Static Web Apps Build Setting)
-| Variable | Value / Placeholder | Description |
-| :--- | :--- | :--- |
-| `VITE_API_BASE_URL` | `https://<backend-app>.azurewebsites.net` | Base URL used by Axios at build time. |
-
----
-
-## 🧪 Running Automated Tests
-
-### 1. Backend Pytest Suite
 ```bash
-# Run pytest from the project root using the venv:
+# Run pytest from the project root:
 backend\.venv\Scripts\pytest -v
 
 # Or from inside backend/:
 cd backend
 pytest -v
 ```
-**Test Results Summary**:
-- `test_voting.py`: 4 tests passed (Successful anonymous vote, double-voting prevention 409, admin 403, mid-transaction atomicity & rollback)
-- `test_admin.py`: 9 tests passed (Voter RBAC block 403, election create & update, candidate nomination, PDF magic byte check, audit logs, turnout analytics, declare-result lifecycle, resume election lifecycle, add voter lifecycle & batch creation)
-- `test_auth.py`: 5 tests passed (Valid login, invalid password 401, profile /me, unauthorized 403, 5-attempt rate limit 429)
-- `test_elections.py`: 3 tests passed (List elections, election detail, candidate rosters)
-- `test_immutability.py`: 3 tests passed (Direct UPDATE on `votes_ledger` aborted, direct DELETE aborted, `audit_logs` update aborted)
-- **Total**: **24 passed in 2.25s**
 
-### 2. Frontend Typecheck & Production Build
+### Test Coverage Summary (26/26 Passing):
+- **`test_voting.py`** (4 tests):
+  - Anonymous ballot submission with privacy verification
+  - Double-voting prevention (HTTP 409 Conflict)
+  - Admin voting prevention (HTTP 403 Forbidden)
+  - Mid-transaction failure rollback and atomicity
+- **`test_admin.py`** (11 tests):
+  - Voter access restriction on administrative endpoints (HTTP 403)
+  - Election creation and timeline updates
+  - Candidate nomination and PDF magic-byte validation
+  - Audit log event recording and retrieval
+  - Turnout analytics and tally calculation
+  - Election lifecycle management (Conclude & Resume)
+  - Single voter onboarding and batch voter creation
+  - Admin self-service password reset
+  - Voter password reset by administrator
+- **`test_auth.py`** (5 tests):
+  - Successful authentication and token issuance
+  - Invalid password rejection (HTTP 401)
+  - User profile endpoint (`/api/auth/me`)
+  - Unauthorized access handling
+  - Brute-force rate limiting (HTTP 429 after 5 failed attempts)
+- **`test_elections.py`** (3 tests):
+  - Active elections listing
+  - Election details retrieval
+  - Candidate roster query
+- **`test_immutability.py`** (3 tests):
+  - Direct `UPDATE` on `votes_ledger` blocked by database trigger
+  - Direct `DELETE` on `votes_ledger` blocked by database trigger
+  - Direct `UPDATE` on `audit_logs` blocked by database trigger
+
+### Frontend Verification:
 ```bash
 cd frontend
 npm run build
 ```
-- Compiles TypeScript and builds production assets to `dist/` with zero errors.
+- Passes TypeScript compilation and bundles static assets with Vite in ~4 seconds with zero errors.
 
 ---
 
-## 🤖 CI/CD Workflow (.github/workflows/deploy-backend.yml)
+## 📁 Repository Structure
 
-On every push to `main`, GitHub Actions:
-1. Runs the complete backend test suite (`pytest -v`).
-2. Packages backend dependencies into `.python_packages`.
-3. Deploys to Azure App Service using `${{ secrets.AZURE_WEBAPP_NAME }}` and `${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}`.
+```
+SecureVote/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI application entry point & middleware
+│   │   ├── config.py            # Environment settings and security configuration
+│   │   ├── database.py          # SQLAlchemy engine, session maker & trigger setup
+│   │   ├── models.py            # Relational database models (6 tables)
+│   │   ├── schemas.py           # Pydantic request/response schemas
+│   │   ├── deps.py              # JWT authentication & rate limiting dependencies
+│   │   ├── seed.py              # Demo election & voter initial seeding
+│   │   └── routers/
+│   │       ├── auth.py          # Login, profile, & session management
+│   │       ├── elections.py     # Election directory & details
+│   │       ├── candidates.py    # Candidate roster & manifesto retrieval
+│   │       ├── votes.py         # Atomic ballot casting endpoint
+│   │       ├── admin.py         # Administrative console & voter management
+│   │       └── analytics.py     # Turnout statistics & results aggregation
+│   ├── tests/                   # Pytest test suite (26 automated tests)
+│   ├── uploads/                 # Storage directory for candidate manifesto PDFs
+│   └── requirements.txt         # Python package dependencies
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/client.ts        # Axios client with bearer token interceptor
+│   │   ├── context/AuthContext  # React context for global auth state
+│   │   ├── components/          # Reusable UI components (Navbar, ProtectedRoute, etc.)
+│   │   ├── pages/
+│   │   │   ├── Login.tsx        # Institutional login page with Caps-Lock warning
+│   │   │   ├── VoterDashboard   # Active elections & voting booth entrance
+│   │   │   ├── Ballot.tsx       # Confidential voting interface
+│   │   │   ├── Confirmation.tsx # Official confirmation code & receipt screen
+│   │   │   ├── AdminDashboard   # Admin controls, candidate management & password reset
+│   │   │   ├── CreateElection   # Election creation wizard
+│   │   │   ├── Results.tsx      # Election turnout and result tallies
+│   │   │   └── NotFound.tsx     # 404 error page
+│   │   └── App.tsx              # Router configuration and application shell
+│   ├── package.json             # Node dependencies and build scripts
+│   └── vite.config.ts           # Vite bundler configuration
+│
+├── docs/                        # Detailed architectural and API documentation
+│   ├── ARCHITECTURE.md          # Database design & ballot decoupling analysis
+│   ├── API.md                   # OpenAPI endpoint specifications
+│   ├── AZURE_DEPLOYMENT.md      # Azure infrastructure configuration guide
+│   ├── STRIDE_THREAT_MODEL.md   # Threat model & risk mitigations
+│   └── ER_DIAGRAM.md            # Entity-relationship diagrams
+└── README.md                    # Project documentation
+```
 
 ---
 
-## 📚 Technical Documentation Index
+## 📚 Technical Documentation
 
-- [docs/AZURE_DEPLOYMENT.md](./docs/AZURE_DEPLOYMENT.md): Comprehensive Azure App Service, PostgreSQL, Key Vault, and Blob Storage guide.
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): Deep-dive into 3NF schema, ballot secrecy, and transaction atomicity.
-- [docs/API.md](./docs/API.md): Complete REST API contract with request/response examples and error schemas.
-- [docs/STRIDE_THREAT_MODEL.md](./docs/STRIDE_THREAT_MODEL.md): STRIDE threat assessment with implemented mitigations.
-- [docs/ER_DIAGRAM.md](./docs/ER_DIAGRAM.md): Mermaid relational diagram of all 6 tables and constraints.
-- [docs/powerbi_views.sql](./docs/powerbi_views.sql): Analytical SQL views for Power BI turnout reporting.
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — Detailed explanation of schema design, ballot privacy, and transaction atomicity.
+- [docs/API.md](./docs/API.md) — Comprehensive REST API documentation with endpoint schemas and error codes.
+- [docs/AZURE_DEPLOYMENT.md](./docs/AZURE_DEPLOYMENT.md) — Cloud deployment guide for Azure App Service, PostgreSQL, Key Vault, and Blob Storage.
+- [docs/STRIDE_THREAT_MODEL.md](./docs/STRIDE_THREAT_MODEL.md) — Security threat model and mitigation controls.
+- [docs/ER_DIAGRAM.md](./docs/ER_DIAGRAM.md) — Entity-relationship diagrams and database constraint definitions.
+
+---
+
+## 📄 License
+
+This project was developed for academic evaluation and institutional demonstration purposes.
