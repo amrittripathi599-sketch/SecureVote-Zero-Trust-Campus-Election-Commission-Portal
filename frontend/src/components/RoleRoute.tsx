@@ -15,7 +15,7 @@ export const RoleRoute: React.FC<RoleRouteProps> = ({ children, allowedRole }) =
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <LoadingSpinner message="Checking cryptographic privileges..." size="lg" />
+        <LoadingSpinner message="Verifying permissions..." size="lg" />
       </div>
     );
   }

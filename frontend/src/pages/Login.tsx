@@ -80,20 +80,20 @@ export const Login: React.FC = () => {
         <div className="lg:col-span-6 space-y-6 text-left">
           <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-semibold tracking-wider">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>CAMPUS ELECTION COMMISSION &bull; SECURE GATEWAY</span>
+            <span>CAMPUS ELECTION COMMISSION &bull; STUDENT PORTAL</span>
           </div>
 
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Cryptographic Voting,{' '}
+              Student Council Elections,{' '}
               <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-                Absolute Secrecy.
+                Confidential &amp; Secure.
               </span>
             </h1>
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl">
-              Official institutional voting portal. Ballots are cryptographically decoupled from
-              voter identity using strict Third Normal Form (3NF) relational partitioning and 
-              protected by tamper-evident append-only audit ledgers.
+              Welcome to the official university election portal. Vote for your student council
+              representatives with complete confidence. Your ballot is strictly private, 
+              anonymous, and securely recorded.
             </p>
           </div>
 
@@ -102,20 +102,20 @@ export const Login: React.FC = () => {
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/30 transition-colors">
               <div className="flex items-center space-x-2.5 text-emerald-400 font-semibold text-xs mb-1.5">
                 <ShieldCheck className="w-4 h-4" />
-                <span>3NF Voter Anonymity</span>
+                <span>100% Anonymous Ballots</span>
               </div>
               <p className="text-[12px] text-slate-400 leading-normal">
-                Zero database linkage between voter identity and candidate ballot selections.
+                Your personal identity is never attached to your candidate selection.
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/30 transition-colors">
               <div className="flex items-center space-x-2.5 text-blue-400 font-semibold text-xs mb-1.5">
                 <FileCheck2 className="w-4 h-4" />
-                <span>Immutable Audit Ledger</span>
+                <span>Verified Vote Count</span>
               </div>
               <p className="text-[12px] text-slate-400 leading-normal">
-                Append-only audit logs with strict immutability triggers prevent record tampering.
+                Every vote is counted accurately and protected against modification.
               </p>
             </div>
           </div>
@@ -125,24 +125,24 @@ export const Login: React.FC = () => {
             <div className="flex items-center justify-between pb-2 border-b border-white/5">
               <span className="flex items-center space-x-2 font-mono text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 <ShieldAlert className="w-3.5 h-3.5 text-emerald-400" />
-                <span>COMMISSION GOVERNANCE</span>
+                <span>ELECTION COMMISSION</span>
               </span>
               <span className="text-emerald-400 flex items-center space-x-1.5 text-[11px] font-mono">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>SESSION ENCRYPTED</span>
+                <span>SECURE CONNECTION</span>
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Chief Returning Officer:</span>
+              <span className="text-slate-400">Chief Election Officer:</span>
               <span className="text-amber-300 font-bold font-mono">Mr. Amrit Tripathi</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Security Mandate:</span>
-              <span className="text-emerald-300 font-medium">Zero-Trust Decoupled Secrecy</span>
+              <span className="text-slate-400">Election Cycle:</span>
+              <span className="text-emerald-300 font-medium">2026–2027 Student Senate</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-400">Access Standard:</span>
-              <span className="text-blue-300 font-mono text-[11px]">Bcrypt Salted &bull; JWT (60m)</span>
+              <span className="text-slate-400">Polling Status:</span>
+              <span className="text-blue-300 font-medium text-[11px]">Voting Active</span>
             </div>
           </div>
         </div>
@@ -153,24 +153,24 @@ export const Login: React.FC = () => {
             <div className="text-left mb-6">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">
-                  Secure Identification
+                  Voter Identification
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/10">
-                  TLS 1.3 Active
+                  Encrypted
                 </span>
               </div>
               <h2 className="text-2xl font-extrabold text-white tracking-tight mt-1.5">
-                Sign In to Portal
+                Sign In to Vote
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Enter your institutional roll number or administrator credentials.
+                Enter your student roll number or administrator credentials.
               </p>
             </div>
 
             {sessionExpired && (
               <div className="mb-5 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-center space-x-2">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
-                <span>Your session expired for security reasons. Please sign in again.</span>
+                <span>Your session expired. Please sign in again.</span>
               </div>
             )}
 
@@ -179,7 +179,7 @@ export const Login: React.FC = () => {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="rollNumber" className="block text-xs font-semibold text-slate-300 mb-1.5 text-left">
-                  Institutional ID / Roll Number
+                  Student ID / Roll Number
                 </label>
                 <div className="relative rounded-xl">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -202,7 +202,7 @@ export const Login: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="password" className="block text-xs font-semibold text-slate-300 text-left">
-                    Master Password
+                    Password
                   </label>
                   {capsLockOn && (
                     <span className="text-[10px] font-mono font-semibold text-amber-400 flex items-center space-x-1 animate-pulse">
@@ -248,11 +248,11 @@ export const Login: React.FC = () => {
                   {isSubmitting ? (
                     <span className="flex items-center space-x-2">
                       <span className="w-4 h-4 border-2 border-navy-950 border-t-transparent rounded-full animate-spin" />
-                      <span>Authenticating Credentials...</span>
+                      <span>Signing in...</span>
                     </span>
                   ) : (
                     <span className="flex items-center space-x-2">
-                      <span>Authorize &amp; Enter Portal</span>
+                      <span>Sign In to Vote</span>
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   )}
@@ -264,10 +264,10 @@ export const Login: React.FC = () => {
             <div className="mt-8 pt-5 border-t border-white/10 text-center space-y-2">
               <div className="flex items-center justify-center space-x-1.5 text-[11px] font-mono text-emerald-400">
                 <Lock className="w-3 h-3" />
-                <span>Zero-Trust Cryptographic Access Gateway</span>
+                <span>Official Student Voting System</span>
               </div>
               <p className="text-[11px] text-slate-500 leading-relaxed max-w-sm mx-auto">
-                Authorized institutional personnel only. Every login attempt is rate-limited and logged into tamper-evident audit trails.
+                Please use your university-assigned roll number and password. For voting assistance or login issues, contact the election desk.
               </p>
             </div>
           </div>

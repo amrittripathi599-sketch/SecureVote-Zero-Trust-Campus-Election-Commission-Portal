@@ -10,7 +10,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   if (isLoading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center">
-        <LoadingSpinner message="Verifying zero-trust credentials..." size="lg" />
+        <LoadingSpinner message="Verifying session..." size="lg" />
       </div>
     );
   }

@@ -60,7 +60,7 @@ export const Confirmation: React.FC = () => {
         <div className="space-y-2">
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-mono font-bold uppercase tracking-wider border border-emerald-500/20">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Cryptographically Committed</span>
+            <span>Official Vote Cast</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Your Ballot Has Been Recorded
@@ -70,12 +70,12 @@ export const Confirmation: React.FC = () => {
           </p>
         </div>
 
-        {/* Cryptographic Receipt Token Box */}
+        {/* Voting Confirmation Reference Box */}
         <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/10 text-left space-y-3 font-mono text-xs">
           <div className="flex items-center justify-between text-slate-400 text-[11px] pb-2 border-b border-white/5">
             <span className="flex items-center space-x-1.5">
               <Hash className="w-3.5 h-3.5 text-emerald-400" />
-              <span>COMMITMENT PROOF HASH</span>
+              <span>OFFICIAL VOTING CONFIRMATION CODE</span>
             </span>
             <button
               onClick={copyReceipt}
@@ -89,7 +89,7 @@ export const Confirmation: React.FC = () => {
               ) : (
                 <>
                   <Copy className="w-3 h-3" />
-                  <span className="text-[10px]">Copy Hash</span>
+                  <span className="text-[10px]">Copy Code</span>
                 </>
               )}
             </button>
@@ -102,25 +102,24 @@ export const Confirmation: React.FC = () => {
           <div className="pt-2 flex items-center justify-between text-[10px] text-slate-500">
             <span className="flex items-center space-x-1">
               <Clock className="w-3 h-3 text-slate-500" />
-              <span>Timestamp (UTC): {formattedTime}</span>
+              <span>Timestamp: {formattedTime}</span>
             </span>
-            <span className="flex items-center space-x-1">
-              <Database className="w-3 h-3 text-blue-400" />
-              <span>Azure PostgreSQL 15</span>
+            <span className="flex items-center space-x-1 text-emerald-400 font-semibold">
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <span>Vote Verified</span>
             </span>
           </div>
         </div>
 
-        {/* 3NF Ballot Secrecy Guarantee Card */}
+        {/* Ballot Privacy Notice */}
         <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-left space-y-2 text-xs">
           <div className="flex items-center space-x-2 text-white font-bold">
             <Lock className="w-4 h-4 text-emerald-400" />
-            <span>Zero-Trust 3NF Anonymity Guarantee</span>
+            <span>Ballot Privacy Guarantee</span>
           </div>
           <p className="text-[12px] text-slate-400 leading-relaxed">
-            In compliance with campus election privacy architecture (3NF), your candidate choice is
-            <strong> never</strong> linked with your student roll number in the database.
-            Your ballot was committed directly to the immutable votes ledger with zero user linkage.
+            Your vote has been recorded anonymously. For complete privacy, your student ID is never
+            stored with your candidate selection. Thank you for participating in campus elections!
           </p>
         </div>
 

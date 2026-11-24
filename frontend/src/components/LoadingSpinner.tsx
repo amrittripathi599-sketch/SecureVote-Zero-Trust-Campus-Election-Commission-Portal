@@ -7,7 +7,7 @@ interface LoadingSpinnerProps {
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  message = 'Loading cryptographic state...',
+  message = 'Loading...',
   size = 'md',
 }) => {
   const sizeClasses = {

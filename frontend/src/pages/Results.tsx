@@ -83,7 +83,7 @@ export const Results: React.FC = () => {
   if (isLoading) {
     return (
       <div className="py-24 flex items-center justify-center">
-        <LoadingSpinner message="Aggregating anonymous ballots from votes ledger..." size="lg" />
+        <LoadingSpinner message="Calculating election results..." size="lg" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export const Results: React.FC = () => {
           Analytics data unavailable for this election.
         </div>
         <Link to="/admin" className="mt-4 inline-flex items-center text-emerald-400 font-semibold text-xs font-mono">
-          <ArrowLeft className="w-4 h-4 mr-1.5" /> Return to Commission Console
+          <ArrowLeft className="w-4 h-4 mr-1.5" /> Return to Admin Console
         </Link>
       </div>
     );
@@ -114,7 +114,7 @@ export const Results: React.FC = () => {
           to="/admin"
           className="inline-flex items-center text-xs font-mono text-slate-400 hover:text-emerald-400 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" /> BACK TO COMMISSION CONSOLE
+          <ArrowLeft className="w-4 h-4 mr-1.5" /> BACK TO ADMIN DASHBOARD
         </Link>
       </div>
 
@@ -122,7 +122,7 @@ export const Results: React.FC = () => {
       <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 space-y-2 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
-            CERTIFIED TURNOUT &amp; AUDIT TALLY
+            OFFICIAL ELECTION RESULTS &amp; TURNOUT
           </span>
           <span className="text-xs font-mono text-slate-400">ELECTION #{analytics.election_id}</span>
         </div>
@@ -130,7 +130,7 @@ export const Results: React.FC = () => {
           {analytics.election_title}
         </h1>
         <p className="text-xs text-slate-400">
-          Aggregated anonymously from the immutable PostgreSQL votes ledger. Individual ballot secrecy is mathematically protected.
+          Official election tally. Individual voter choices remain confidential and completely anonymous.
         </p>
       </div>
 

@@ -443,7 +443,7 @@ export const AdminDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="py-24 flex items-center justify-center">
-        <LoadingSpinner message="Securing administrative connection to tribunal ledger..." size="lg" />
+        <LoadingSpinner message="Loading administrative console..." size="lg" />
       </div>
     );
   }
@@ -458,15 +458,15 @@ export const AdminDashboard: React.FC = () => {
               <ShieldAlert className="w-5 h-5" />
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-white">
-              Campus Election Commission Tribunal
+              Election Commission Admin Console
             </h1>
           </div>
           <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2">
-            <span>Chief Officer: <strong className="text-amber-300 font-mono">{user?.full_name || 'Mr. Amrit Tripathi'}</strong></span>
+            <span>Chief Election Officer: <strong className="text-amber-300 font-mono">{user?.full_name || 'Mr. Amrit Tripathi'}</strong></span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
               ID: {user?.roll_number || 'ADMIN001'}
             </span>
-            <span>&bull; Zero-trust administrative control &amp; immutable audit monitoring.</span>
+            <span>&bull; Official Campus Voting Commission Administration</span>
           </div>
         </div>
 
@@ -514,10 +514,10 @@ export const AdminDashboard: React.FC = () => {
       <div className="border-b border-white/10 pb-2">
         <nav className="flex space-x-2 overflow-x-auto">
           {[
-            { id: 'elections', label: 'Elections & Controls', icon: Vote },
-            { id: 'candidates', label: 'Candidate Nominations & PDFs', icon: Users },
-            { id: 'audit', label: 'Tamper-Evident Audit Trail', icon: FileText },
-            { id: 'users', label: 'Institutional Directory', icon: Users },
+            { id: 'elections', label: 'Elections', icon: Vote },
+            { id: 'candidates', label: 'Candidates & Manifestos', icon: Users },
+            { id: 'audit', label: 'Audit Log', icon: FileText },
+            { id: 'users', label: 'Voter Directory', icon: Users },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -826,13 +826,13 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center space-x-2">
-                <span>Tamper-Evident Security Logs</span>
+                <span>System Audit Log</span>
                 <span className="text-xs font-mono font-normal text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
                   {auditTotal} Events
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Protected by PostgreSQL strict BEFORE UPDATE/DELETE immutability triggers.
+                Complete record of voting events, voter authentications, and election management.
               </p>
             </div>
 
@@ -964,9 +964,9 @@ export const AdminDashboard: React.FC = () => {
         <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
             <div>
-              <h2 className="text-lg font-bold text-white">Institutional Voter &amp; Admin Directory</h2>
+              <h2 className="text-lg font-bold text-white">Student Voter &amp; Administrator Directory</h2>
               <p className="text-xs text-slate-400">
-                Zero-Trust Audit: Verified users with global voting flags. Password hashes are never transmitted.
+                Registered student voters and election staff. Passwords are encrypted and secure.
               </p>
             </div>
 
@@ -1082,7 +1082,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="font-semibold text-white">Target Election:</div>
               <p className="font-bold text-emerald-400">{electionToDeclare.title} (#{electionToDeclare.election_id})</p>
               <p className="text-[11px] text-slate-500">
-                This will finalize the vote counts from the immutable ledger, certify the winner, and permanently close balloting.
+                This will calculate final vote counts, announce the winning candidate, and conclude the election.
               </p>
             </div>
 
@@ -1192,8 +1192,8 @@ export const AdminDashboard: React.FC = () => {
                   <UserPlus className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Register Eligible Voter</h3>
-                  <p className="text-xs text-slate-400">Zero-Trust Credential Provisioning</p>
+                  <h3 className="text-lg font-bold text-white">Register Student Voter</h3>
+                  <p className="text-xs text-slate-400">Single entry or bulk registration</p>
                 </div>
               </div>
 
@@ -1268,7 +1268,7 @@ export const AdminDashboard: React.FC = () => {
                       className="glass-input w-full text-xs px-3.5 py-2.5 rounded-xl font-mono focus:text-white"
                     />
                     <p className="text-[11px] text-slate-500">
-                      Password will be securely hashed with bcrypt prior to database insertion.
+                      Initial temporary password for first-time voter sign in.
                     </p>
                   </div>
                 </>
@@ -1430,11 +1430,11 @@ export const AdminDashboard: React.FC = () => {
                   className="px-5 py-2.5 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
                 >
                   {isResettingAdminPassword ? (
-                    <span>Updating Hash...</span>
+                    <span>Updating Password...</span>
                   ) : (
                     <>
                       <KeyRound className="w-4 h-4" />
-                      <span>Update Master Password</span>
+                      <span>Update Admin Password</span>
                     </>
                   )}
                 </button>
@@ -1480,7 +1480,7 @@ export const AdminDashboard: React.FC = () => {
                   className="glass-input w-full text-xs font-mono px-3.5 py-2.5 rounded-xl focus:text-white"
                 />
                 <p className="text-[11px] text-slate-500 mt-1">
-                  The new password will be hashed using bcrypt before storage.
+                  The student can immediately sign in with this new password.
                 </p>
               </div>
 

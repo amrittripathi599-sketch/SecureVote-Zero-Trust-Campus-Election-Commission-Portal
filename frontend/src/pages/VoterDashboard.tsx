@@ -53,39 +53,38 @@ export const VoterDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="py-24 flex items-center justify-center">
-        <LoadingSpinner message="Fetching campus elections from immutable ledger..." size="lg" />
+        <LoadingSpinner message="Loading campus elections..." size="lg" />
       </div>
     );
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-fade-in text-left">
-      {/* Zero-Trust Header Banner */}
+      {/* Voter Header Banner */}
       <div className="glass-panel-elevated rounded-3xl p-8 sm:p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-semibold uppercase tracking-wider">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
             <Shield className="w-3.5 h-3.5" />
-            <span>3NF Ballot Secrecy Active</span>
+            <span>Secret Ballot Guaranteed</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Official Campus Elections &amp; Ballots
+            Campus Elections &amp; Voting Booth
           </h1>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-            Every ballot cast is cryptographically decoupled from your institutional identity.
-            The system records your participation timestamp to prevent double-voting, while the
-            vote ledger preserves absolute ballot anonymity.
+            Welcome to the official student voting portal. Review nominated candidates, read their manifestos,
+            and cast your ballot. Your vote is strictly confidential and cannot be traced back to your identity.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-mono text-slate-400">
+          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-slate-400">
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-white/5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Ledger: Immutable &amp; Encrypted</span>
+              <span>Verified &amp; Confidential</span>
             </span>
             <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-white/5">
               <Lock className="w-3.5 h-3.5 text-blue-400" />
-              <span>Zero Identity Tracking</span>
+              <span>Anonymous Voting</span>
             </span>
           </div>
         </div>

@@ -93,7 +93,7 @@ export const App: React.FC = () => {
             </Routes>
           </main>
 
-          {/* Institutional Prestige Footer */}
+          {/* Official Footer */}
           <footer className="relative z-10 py-8 border-t border-white/5 bg-navy-900/80 backdrop-blur-md text-xs text-slate-400">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -102,30 +102,30 @@ export const App: React.FC = () => {
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-bold text-slate-200">SecureVote Cryptographic Election System</span>
-                    <span className="block text-[11px] text-slate-400">Autonomous Zero-Trust Campus Election Commission</span>
+                    <span className="font-bold text-slate-200">SecureVote Campus Portal</span>
+                    <span className="block text-[11px] text-slate-400">Student Election Commission &bull; Official Voting Platform</span>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono text-slate-400">
-                  <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/5">
-                    <Database className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Azure PostgreSQL 15</span>
-                  </span>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400">
                   <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/5">
                     <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>3NF Anonymized Ledger</span>
+                    <span>Confidential Ballot</span>
                   </span>
                   <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/5">
-                    <Cpu className="w-3.5 h-3.5 text-purple-400" />
-                    <span>SHA-256 Audit Immutability</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Verified Vote Count</span>
+                  </span>
+                  <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/5">
+                    <Database className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Tamper-Proof Audit</span>
                   </span>
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400">
-                <span>&copy; {new Date().getFullYear()} Campus Election Commission. All zero-trust ballots mathematically sealed.</span>
-                <span className="mt-2 sm:mt-0 font-mono text-slate-400">Certified ISO/IEC 27001 Cryptographic Standards</span>
+              <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500">
+                <span>&copy; {new Date().getFullYear()} Campus Election Commission. All rights reserved.</span>
+                <span className="mt-2 sm:mt-0">Official Student Voting Portal &bull; Designed for Campus Democracy</span>
               </div>
             </div>
           </footer>

@@ -138,8 +138,8 @@ export const Ballot: React.FC = () => {
           {election.title}
         </h1>
         <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-2xl">
-          Select one approved nominee from the official commission slate below. Your vote is recorded
-          under strict 3NF anonymity: your identity is not linked to your choice.
+          Select one approved candidate below. Your vote is completely confidential: your student identity
+          is never linked to your ballot choice.
         </p>
       </div>
 
@@ -150,8 +150,8 @@ export const Ballot: React.FC = () => {
         <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl text-cyan-300 flex items-start space-x-3 text-xs">
           <CheckCircle className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">Ballot Already Sealed:</span> You have already cast your ballot in this election.
-            Zero-trust duplicate protection prohibits multiple submissions.
+            <span className="font-bold">Ballot Already Submitted:</span> You have already voted in this election.
+            To maintain election fairness, each student may only vote once.
           </div>
         </div>
       )}
@@ -263,7 +263,7 @@ export const Ballot: React.FC = () => {
               Selected Choice: <span className="text-emerald-400 font-bold">{selectedCandidate.full_name}</span> ({selectedCandidate.position})
             </span>
           ) : (
-            <span className="text-slate-500 font-mono text-xs">Select a candidate above to unlock ballot seal</span>
+            <span className="text-slate-500 text-xs">Select a candidate above to enable submission</span>
           )}
         </div>
 
@@ -273,7 +273,7 @@ export const Ballot: React.FC = () => {
           className="w-full sm:w-auto px-6 py-3 rounded-xl font-extrabold text-xs text-navy-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:from-emerald-300 hover:to-teal-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-glow transition-all flex items-center justify-center space-x-2 cursor-pointer"
         >
           <Vote className="w-4 h-4" />
-          <span>Cast Immutable Ballot</span>
+          <span>Submit Your Vote</span>
         </button>
       </div>
 
@@ -285,7 +285,7 @@ export const Ballot: React.FC = () => {
               <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-white">Confirm Official Ballot</h3>
+              <h3 className="text-lg font-bold text-white">Confirm Your Vote</h3>
             </div>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
@@ -294,14 +294,13 @@ export const Ballot: React.FC = () => {
               <strong className="text-white">{selectedCandidate.position}</strong>.
             </p>
 
-            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/10 text-[11px] text-slate-400 space-y-1 font-mono">
+            <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/10 text-xs text-slate-400 space-y-1">
               <div className="font-bold text-emerald-400 flex items-center space-x-1.5">
                 <Lock className="w-3.5 h-3.5" />
-                <span>Zero-Trust Secrecy Protocol</span>
+                <span>Confidential Ballot</span>
               </div>
               <p>
-                Once committed to Azure PostgreSQL, the vote ledger is immutably sealed.
-                Your choice cannot be viewed or revoked by anyone.
+                Your vote will be recorded anonymously and cannot be altered or reversed once submitted.
               </p>
             </div>
 

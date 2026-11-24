@@ -77,7 +77,7 @@ export const CreateElection: React.FC = () => {
             </h1>
           </div>
           <p className="text-xs text-slate-400">
-            Configure the polling timeline, official position, and zero-trust ballot lifecycle.
+            Set the election title, polling schedule, and initial availability.
           </p>
         </div>
 
@@ -135,18 +135,18 @@ export const CreateElection: React.FC = () => {
               onChange={(e) => setStatus(e.target.value as any)}
               className="glass-input w-full px-4 py-3 rounded-xl text-xs focus:text-white"
             >
-              <option value="open" className="bg-navy-950 text-white">Open (Immediate student participation enabled)</option>
-              <option value="draft" className="bg-navy-950 text-white">Draft (Private setup mode)</option>
+              <option value="open" className="bg-navy-950 text-white">Open (Immediate student voting enabled)</option>
+              <option value="draft" className="bg-navy-950 text-white">Draft (Setup mode, hidden from voters)</option>
             </select>
           </div>
 
           <div className="p-4 bg-slate-900/80 rounded-2xl border border-white/10 text-xs text-slate-400 space-y-1">
             <div className="font-semibold text-white flex items-center space-x-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Immutable Election Genesis:</span>
+              <span>Election Notice:</span>
             </div>
             <p>
-              Once created, election creation is committed to the append-only audit trail in Azure PostgreSQL with Chief Officer credentials and timestamp.
+              Once created, this election will appear in the voting booth during its scheduled window. All changes are logged for transparency.
             </p>
           </div>
 

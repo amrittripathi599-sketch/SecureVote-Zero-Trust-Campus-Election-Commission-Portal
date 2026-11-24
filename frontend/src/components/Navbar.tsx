@@ -44,12 +44,12 @@ export const Navbar: React.FC = () => {
                 <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
                   SECURE<span className="text-emerald-400 font-light">VOTE</span>
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  Zero-Trust v2.4
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Official Portal
                 </span>
               </div>
               <p className="text-[11px] font-medium tracking-wide text-slate-400 uppercase">
-                Campus Election Commission &bull; Audit Tribunal
+                Campus Election Commission &bull; Student Voting Portal
               </p>
             </div>
           </Link>
@@ -81,7 +81,7 @@ export const Navbar: React.FC = () => {
                       }`}
                     >
                       <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Commission Console</span>
+                      <span>Admin Console</span>
                     </Link>
                     <Link
                       to="/dashboard"
@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
                       }`}
                     >
                       <LayoutDashboard className="w-3.5 h-3.5" />
-                      <span>Elections Directory</span>
+                      <span>View Elections</span>
                     </Link>
                   </>
                 )}
