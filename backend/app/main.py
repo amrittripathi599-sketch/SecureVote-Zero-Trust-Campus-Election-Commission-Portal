@@ -1,14 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import init_db
 from app.routers import admin, analytics, auth, candidates, elections, votes
-from app.seed import ensure_sample_manifestos, seed_database
+from app.seed import SAMPLE_MANIFESTOS, ensure_sample_manifestos, generate_sample_pdf, seed_database
 
 # Setup structured logging
 logging.basicConfig(
@@ -80,11 +81,46 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Static Manifesto Downloads (Local Storage fallback)
+# Candidate Manifesto Downloads (Guaranteed Delivery Endpoint)
 # ---------------------------------------------------------------------------
 uploads_dir = Path(settings.UPLOAD_DIR).resolve()
 uploads_dir.mkdir(parents=True, exist_ok=True)
 ensure_sample_manifestos(uploads_dir)
+
+
+@app.get("/uploads/{filename}", tags=["Manifestos"])
+def get_manifesto_file(filename: str):
+    """
+    Zero-Trust Manifesto Delivery Endpoint:
+    Guarantees candidate manifesto PDFs are served reliably even on ephemeral container hosts.
+    Generates sample manifestos on-demand if missing from disk, and serves with genuine application/pdf headers.
+    """
+    # Prevent directory traversal attacks
+    clean_filename = Path(filename).name
+    target_path = (uploads_dir / clean_filename).resolve()
+    if not str(target_path).startswith(str(uploads_dir.resolve())):
+        raise HTTPException(status_code=403, detail="Access forbidden.")
+
+    # On-demand generation safety net for demo candidates if disk was wiped
+    if not target_path.exists():
+        for item in SAMPLE_MANIFESTOS:
+            if item["filename"] == clean_filename:
+                pdf_bytes = generate_sample_pdf(item["name"], item["position"], item["vision"])
+                with open(target_path, "wb") as f:
+                    f.write(pdf_bytes)
+                break
+
+    if target_path.exists():
+        return FileResponse(
+            path=str(target_path),
+            media_type="application/pdf",
+            filename=clean_filename,
+            content_disposition_type="inline"
+        )
+
+    raise HTTPException(status_code=404, detail="Manifesto document not found.")
+
+
 app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # ---------------------------------------------------------------------------
